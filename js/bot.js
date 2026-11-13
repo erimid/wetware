@@ -22,6 +22,8 @@
       if (it.imp) { var B = G.B; s = 5 + (B.factions[it.imp.f] ? 3 : 0) + (it.imp.zone === 'arm' ? 1 : 0); for (var f in B.factions) if (f !== it.imp.f && D.FUSIONS[D.fusionKey(f, it.imp.f)]) s += 2; if (!D.autoPlace(run, it.imp.id)) s -= 4; if (it.s) s = run.scrip > 80 ? 2 : -5; }
       else if (it.s) { s = it.s.id === 'heal' ? (run.hp < run.maxHp * 0.7 ? 9 : -9) : (it.s.id === 'gear' ? 4 : (it.s.id === 'mod' ? 3 : -9)); }
       else if (it.b) s = -9;
+      else if (it.boon) s = it.boon.bot;
+      else if (it.k && D.CHARS[it.k]) s = -9;
       else s = 3 - i * 0.1;
       if (o.title === 'An offer, at a price') s = i === 0 ? (run.maxHp > 90 ? 5 : 0) : (i === 2 ? 1 : 0);
       if (s > bs) { bs = s; best = i; }
@@ -68,7 +70,7 @@
   Bt.danger = danger;
 
   function pickTarget(P) {
-    var best = null, bs = -1e9, pr = { patch: 9, rigger: 7, spitter: 4, turret: 3, leech: 2, ghost: 1 };
+    var best = null, bs = -1e9, pr = { patch: 9, shepherd: 9, rigger: 7, sniper: 6, netter: 5, spitter: 4, turret: 3, leech: 2, ghost: 1, rat: 1 };
     G.enemies.forEach(function (e) {
       if (e.dead || e.spawnT > 0 || e.team !== 1) return;
       var d = W.dist(P.x, P.z, e.x, e.z), s = (pr[e.type] || 0) - d * 0.9 - (e.cloak > 0.5 ? 4 : 0) + (e.stun > 0 ? 2 : 0) + (e.boss ? 3 : 0);
@@ -84,7 +86,8 @@
     if (!P.alive) return a;
     S.atkT -= dt; S.spT -= dt; S.spHold -= dt; S.pathT -= dt;
     var dodgeOnly = W.params.bot === 'dodge';
-    var T = pickTarget(P), goal = null, range = 0, melee = run.weapon !== 'carbine';
+    var WK = D.WEAPONS[run.weapon], CH = C.char(), BW = WK.bot;
+    var T = pickTarget(P), goal = null, range = 0, melee = WK.kind !== 'ranged';
     // ---- where do we want to be ----
     if (G.sq) a.interact = Math.random() < dt * 1.2;
     if (!T) {
@@ -92,7 +95,7 @@
       else {
         var doors = room.doors.filter(function (d) { return d.open; });
         if (doors.length) {
-          var pref = { implant: 6, chop: 4, gear: 4, memory: 2, scrip: 2, health: run.hp < run.maxHp * 0.6 ? 9 : 1, boss: 5, shop: 5, event: 5 };
+          var pref = { implant: 6, chop: 4, gear: 4, memory: 2, scrip: 2, shrine: W.params.door === 'shrine' ? 9 : 3, risk: W.params.door === 'risk' ? 9 : 0.5, health: run.hp < run.maxHp * 0.6 ? 9 : 1, boss: 5, shop: 5, event: 5 };
           doors.sort(function (d1, d2) { return (pref[d2.reward.kind] || 0) - (pref[d1.reward.kind] || 0); });
           var d0 = doors[0];
           // at the stall: trade once before leaving
@@ -102,7 +105,7 @@
       }
       if (G.roomKind !== 'shop') S.shopped = false;
     } else {
-      range = dodgeOnly ? 8 : (melee ? C.reach() * 0.8 + T.r : 9);
+      range = dodgeOnly ? 8 : (melee ? C.reach() * 0.8 + T.r : Math.min(9, C.reach() * 0.7));
       goal = { x: T.x, z: T.z };
       if (T.type === 'dredge') { range = T.phase === 3 ? 3.9 : 4.25; if (dodgeOnly) range = T.phase === 3 ? 6 : 4.3; }
       if (T.shieldUp) { goal = { x: T.x - Math.sin(T.facing) * 2.4, z: T.z - Math.cos(T.facing) * 2.4 }; range = 0.6; }
@@ -152,15 +155,15 @@
       var reach = C.reach() + T.r, close = C.near(P.x, P.z, 3.4).length, safe = urgent < 3;
       if (melee) {
         if (td < reach * 0.95 && safe && S.atkT <= 0) { a.attack = true; S.atkT = 0.11; }
-        var wantSp = S.spT <= 0 && P.state === 'idle' && safe && (run.weapon === 'baton' ? (close >= 2 || (T.shieldUp && td < 3.2) || (T.boss && td < reach) || (T.armor > 0 && td < 3.2)) : (td < 6 && (T.shieldUp || T.armor > 0 || T.hp > 30)));
-        if (wantSp) { a.special = true; S.spT = run.weapon === 'baton' ? 3.2 : 4; S.spHold = run.weapon === 'baton' ? 0.55 : 0.2; a.attack = false; }
+        var wantSp = S.spT <= 0 && P.state === 'idle' && safe && (BW.sp === 'crowd' ? (close >= 2 || (T.shieldUp && td < 3.2) || (T.boss && td < reach) || (T.armor > 0 && td < 3.2)) : (td < (BW.sp === 'far' ? 12 : 6) && (T.shieldUp || T.armor > 0 || T.hp > 30)));
+        if (wantSp) { a.special = true; S.spT = BW.cd; S.spHold = BW.hold; a.attack = false; }
       } else {
         var los = !Wd.blocked(room, P.x, P.z, T.x, T.z);
-        if (td < 16 && los) a.attackHeld = true;
-        if (S.spT <= 0 && P.state === 'idle' && los && td < 20 && safe && (T.hp > 25 || T.shieldUp || T.armor > 0)) { a.special = true; S.spT = 3.5; S.spHold = 0.65; }
+        if (td < C.reach() - 1 && los) a.attackHeld = true;
+        if (S.spT <= 0 && P.state === 'idle' && los && td < C.reach() + 2 && safe && (T.hp > 25 || T.shieldUp || T.armor > 0)) { a.special = true; S.spT = BW.cd; S.spHold = BW.hold; }
       }
       if (S.spHold > 0) a.specialHeld = true;
-      if (P.tagCd <= 0 && td < 13 && P.state === 'idle' && (T.hp > 20 || B.hijack)) { a.tag = true; if (B.hijack) { var hj = null; G.enemies.forEach(function (e) { if (!e.dead && e.team === 1 && (e.type === 'turret' || e.type === 'patch') && W.dist(e.x, e.z, P.x, P.z) < 13) hj = e; }); if (hj) a.aimAt = { x: hj.x, z: hj.z }; } }
+      if (P.tagCd <= 0 && td < CH.qRange + (CH.q === 'grapple' ? T.r : 0) && P.state === 'idle' && (T.hp > 20 || B.hijack)) { a.tag = true; if (B.hijack) { var hj = null; G.enemies.forEach(function (e) { if (!e.dead && e.team === 1 && (e.type === 'turret' || e.type === 'patch') && W.dist(e.x, e.z, P.x, P.z) < 13) hj = e; }); if (hj) a.aimAt = { x: hj.x, z: hj.z }; } }
       if (B.active && P.activeCd <= 0 && P.state === 'idle' && ((B.active === 'emp' && C.near(P.x, P.z, 6).length >= 2) || (B.active === 'lance' && td < 14) || (T.boss && td < 7))) a.active = true;
       // heat: vent into a crowd, or as soon as redline has paid for itself
       if (P.redline) { S.redT += dt; if (close >= 1 && S.redT > 2.5 || S.redT > 5 || run.hp < run.maxHp * 0.45) { a.vent = true; } } else S.redT = 0;

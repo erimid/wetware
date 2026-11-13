@@ -17,25 +17,36 @@
     rigger: { hp: 55, r: 0.55, speed: 3.6, scrip: 5, mem: 2, name: 'Rigger' },
     turret: { hp: 36, r: 0.55, speed: 0, fixed: true, scrip: 1, mem: 0, name: 'Turret' },
     bruiser: { hp: 220, r: 1.15, speed: 2.4, armor: 90, scrip: 9, mem: 4, name: 'Bruiser exo' },
-    patch: { hp: 32, r: 0.5, speed: 4.6, fly: true, y: 1.9, scrip: 4, mem: 2, name: 'Patch drone' }
+    patch: { hp: 32, r: 0.5, speed: 4.6, fly: true, y: 1.9, scrip: 4, mem: 2, name: 'Patch drone' },
+    rat: { hp: 8, r: 0.32, speed: 6.6, scrip: 1, mem: 0.34, name: 'Drain rat' },
+    bomber: { hp: 40, r: 0.6, speed: 4.5, scrip: 4, mem: 2, name: 'Bilge bomber' },
+    crab: { hp: 85, r: 0.85, speed: 3.6, scrip: 5, mem: 2, name: 'Pump crab' },
+    welder: { hp: 95, r: 0.72, speed: 2.5, scrip: 6, mem: 2, name: 'Pole welder' },
+    sniper: { hp: 48, r: 0.52, speed: 3.4, scrip: 5, mem: 2, name: 'Rail spotter' },
+    netter: { hp: 60, r: 0.58, speed: 3.4, scrip: 5, mem: 2, name: 'Net thrower' },
+    shepherd: { hp: 34, r: 0.5, speed: 4.4, fly: true, y: 2.1, scrip: 5, mem: 2, name: 'Awning drone' },
+    hopper: { hp: 50, r: 0.52, speed: 4.2, scrip: 4, mem: 2, name: 'Gantry hopper' }
   };
-  var TRAITS = ['swift', 'volatile', 'regen'];
+  var TRAITS = ['swift', 'volatile', 'regen', 'plated', 'hasty'];
 
   E.spawn = function (type, x, z, o) {
     o = o || {}; var s = E.SPEC[type], sc = G.hpScale || 1;
-    var rigKind = { leech: 'leech', scav: 'scav', hound: 'hound', spitter: 'spitter', warden: 'warden', ghost: 'ghost', rigger: 'rigger', turret: 'turret', bruiser: 'bruiser', patch: 'patch' }[type];
-    var rig = M.make(rigKind);
+    var rig = M.make(type);
     var e = { type: type, x: x, z: z, y: s.y || 0, r: s.r, hp: Math.round((o.hp || s.hp) * sc), speed: s.speed, fly: !!s.fly, fixed: !!s.fixed, facing: Math.random() * 6.28, state: 'move', st: 0, kvx: 0, kvz: 0, mvx: 0, mvz: 0, stun: 0, slow: 0, tox: 0, toxT: 0, toxTick: 0, mark: 0, tag: 0, flash: 0, rig: rig, team: 1, rnd: Math.random(), cd: 1 + Math.random() * 1.5, spawnT: o.instant ? 0 : 0.75, dead: false, armor: 0, scrip: s.scrip, mem: s.mem, name: s.name, phase: Math.random() * 6, stagger: 0, root: 0, avoidT: 0, side: Math.random() < 0.5 ? 1 : -1, slowAtk: o.slow ? 1.45 : 1, windK: 1, summon: o.summon, owner: o.owner };
     e.maxHp = e.hp;
     if (s.armor) { e.armor = e.maxArmor = s.armor; }
     if (type === 'warden') { e.shieldUp = true; e.shieldHp = 34; }
     if (type === 'ghost') e.cloak = 1;
+    if (type === 'crab') { e.shieldUp = true; e.shieldHp = 40; }
+    if (type === 'bomber') e.onKilled = function (b) { if (!b.boomed) C.tell({ shape: 'circle', x: b.x, z: b.z, r: 2.8, delay: 0.75, dmg: 14, kb: 9, team: 'a', col: 0xffb347, keep: true, onFire: function (t) { boom(t.x, t.z, 2.8); } }); };
     if (o.elite) {
-      e.elite = true; e.trait = o.trait || TRAITS[Math.floor(Math.random() * 3)];
+      e.elite = true; e.trait = o.trait || TRAITS[Math.floor(Math.random() * TRAITS.length)];
       e.hp = e.maxHp = Math.round(e.hp * 1.7); e.armor = e.maxArmor = Math.max(e.armor, Math.round(e.maxHp * 0.45)); e.r *= 1.15;
       rig.root.scale.setScalar(1.22); M.setGlow(rig, 0.55, 0.12, 0.05);
       if (e.trait === 'swift') { e.speed *= 1.35; e.windK = 0.8; }
-      e.name = { swift: 'Swift ', volatile: 'Volatile ', regen: 'Mending ' }[e.trait] + s.name.toLowerCase();
+      if (e.trait === 'plated') { e.armor = e.maxArmor = Math.round(e.maxHp * 0.9); }
+      if (e.trait === 'hasty') { e.windK = 0.7; e.hasty = true; }
+      e.name = { swift: 'Swift ', volatile: 'Volatile ', regen: 'Mending ', plated: 'Plated ', hasty: 'Frantic ' }[e.trait] + s.name.toLowerCase();
     }
     rig.root.position.set(x, 8, z); rig.root.visible = false;
     W.gfx.scene.add(rig.root);
@@ -66,7 +77,120 @@
     return C.tell({ shape: 'circle', x: e.x, z: e.z, r: rad || e.r + 0.45, delay: 0, dur: dur, dmg: dmg, kb: kb, team: e.team === 2 ? 'e' : 'p', src: e, follow: { e: e, dist: 0.3 }, followActive: true, quiet: true });
   }
 
+  function boom(x, z, r) { F.steamBurst(x, z, 7, r, 0xffd9a0); F.spawn(K.RING, { x: x, y: 0.1, z: z, s: r, col: 0xffb347, dur: 0.3, p: [0.2, 0.2] }); F.addShake(0.35); F.flashLight(x, 1.2, z, [1, 0.75, 0.4], 1.8, 0.2, r + 4); W.audio.sfx('boom'); }
+  // keep a band of distance from the target, strafing inside it
+  function kite(e, T, d, a, near, far, dt) {
+    var tx, tz;
+    if (d < near) { tx = e.x - Math.sin(a) * 4; tz = e.z - Math.cos(a) * 4; } else if (d > far) { tx = T.x; tz = T.z; } else { tx = e.x + Math.cos(a) * 3 * e.side; tz = e.z - Math.sin(a) * 3 * e.side; }
+    steer(e, tx, tz, e.speed * (d < near ? 1.15 : 0.75), dt);
+    if (Math.random() < dt * 0.4) e.side = -e.side;
+  }
   var AI = {
+    rat: function (e, dt, T, d, a) {
+      if (e.state === 'move') {
+        var wob = Math.sin(G.time * 7 + e.phase * 3) * 1.2;
+        steer(e, T.x + Math.cos(a) * wob, T.z - Math.sin(a) * wob, e.speed, dt); face(e, ang(e.mvx, e.mvz), 12, dt); e.cd -= dt;
+        if (d < 1.5 + T.r && e.cd <= 0) { go(e, 'windup', { wind: 0.34 }); e.facing = a; C.tell({ shape: 'circle', x: e.x, z: e.z, r: 1.05, delay: 0.34, dmg: 4, kb: 2, src: e, follow: { e: e, dist: 0.5 }, col: RED }); }
+      } else if (e.state === 'windup') { if (e.st >= e.wind) { go(e, 'strike'); e.kvx += Math.sin(e.facing) * 6; e.kvz += Math.cos(e.facing) * 6; } }
+      else if (e.state === 'strike') { if (e.st > 0.15) { go(e, 'recover', { recT: 0.5 + e.rnd * 0.4 }); e.cd = 0.9 + Math.random(); e.kvx -= Math.sin(e.facing) * 7; e.kvz -= Math.cos(e.facing) * 7; } }
+      else if (e.st >= e.recT) go(e, 'move');
+    },
+    bomber: function (e, dt, T, d, a) {
+      if (e.state === 'move') {
+        steer(e, T.x, T.z, e.speed, dt); face(e, a, 7, dt);
+        if (d < 2.4 + T.r) {
+          var w = 0.95 * e.slowAtk * e.windK; go(e, 'windup', { wind: w });
+          C.tell({ shape: 'circle', x: e.x, z: e.z, r: 3.3, delay: w, dmg: 20, kb: 12, team: 'a', src: e, follow: { e: e }, col: 0xffb347, onFire: function (t) { boom(t.x, t.z, 3.3); e.boomed = true; C.kill(e, {}); } });
+          W.audio.sfx('tellBeep'); if (!G.hinted.bomber) { G.hinted.bomber = true; W.ui.toast('Bilge bomber. Hit it to stop the fuse, or get clear. The blast hurts its friends too.'); }
+        }
+      } else if (e.state === 'windup') { e.mvx = Math.sin(e.facing) * 1.4; e.mvz = Math.cos(e.facing) * 1.4; M.setGlow(e.rig, 0.6 * (0.5 + 0.5 * Math.sin(e.st * 30)), 0.25, 0); }
+      else if (e.st >= (e.recT || 0.45)) { go(e, 'move'); M.setGlow(e.rig, 0, 0, 0); }
+    },
+    crab: function (e, dt, T, d, a) {
+      if (e.state === 'move') {
+        e.cd -= dt;
+        if (d > 3.6) steer(e, T.x, T.z, e.speed, dt); else steer(e, e.x + Math.cos(a) * 3 * e.side, e.z - Math.sin(a) * 3 * e.side, e.speed * 0.8, dt);
+        face(e, a, 2.3, dt); if (Math.random() < dt * 0.3) e.side = -e.side;
+        if (d < 3.2 + T.r && e.cd <= 0 && Math.abs(W.angDiff(e.facing, a)) < 0.8) { var w = 0.62 * e.windK * e.slowAtk; go(e, 'windup', { wind: w }); C.tell({ shape: 'sector', x: e.x, z: e.z, r: 3.4, half: 0.75, ang: e.facing, delay: w, dmg: 15, kb: 10, src: e, follow: { e: e }, col: RED }); W.audio.sfx('tellClank'); }
+      } else if (e.state === 'windup') { if (e.st >= e.wind) { go(e, 'strike'); F.spawn(K.SLASH, { x: e.x, y: 0.8, z: e.z, s: 3.4, rot: e.facing, col: 0xffa07a, dur: 0.16, p: [0.75, 1, 0.34, 0] }); W.audio.sfx('swingHeavy', 0.6); } }
+      else if (e.state === 'strike') { if (e.st > 0.2) { go(e, 'recover', { recT: 1.3 }); e.cd = 1.2; } }
+      else if (e.st >= e.recT) go(e, 'move');
+    },
+    welder: function (e, dt, T, d, a) {
+      if (e.state === 'move') {
+        steer(e, T.x, T.z, e.speed, dt); face(e, a, 3, dt); e.cd -= dt;
+        if (d < 5.0 + T.r && e.cd <= 0) { var w = 0.8 * e.windK * e.slowAtk; go(e, 'windup', { wind: w }); C.tell({ shape: 'sector', x: e.x, z: e.z, r: 5.6, half: 0.42, ang: e.facing, delay: w, dur: 1.1, dmg: 11, kb: 3, src: e, follow: { e: e }, followActive: true, col: 0xffb347 }); W.audio.sfx('hiss'); }
+      } else if (e.state === 'windup') { face(e, a, 1.0, dt); if (e.st >= e.wind) { go(e, 'strike'); W.audio.sfx('steam'); } }
+      else if (e.state === 'strike') {
+        face(e, a, 1.15, dt); e.flT = (e.flT || 0) - dt;
+        if (e.flT <= 0) { e.flT = 0.045; var r0 = 1.2 + Math.random() * 4.2, aa = e.facing + (Math.random() - 0.5) * 0.75; F.spawn(K.STEAM, { x: e.x + Math.sin(aa) * r0, y: 1.0, z: e.z + Math.cos(aa) * r0, s: 0.5 + r0 * 0.12, bill: true, col: 0xffe08a, col2: 0xff5a1a, dur: 0.28, vy: 1.6, grow: 0.6, alpha: 0.9 }); }
+        if (e.st > 1.1) { go(e, 'recover', { recT: 1.5 }); e.cd = 1.4; }
+      } else if (e.st >= e.recT) go(e, 'move');
+    },
+    sniper: function (e, dt, T, d, a) {
+      if (e.state === 'move') {
+        e.cd -= dt; kite(e, T, d, a, 9, 15, dt); face(e, a, 6, dt);
+        if (e.cd <= 0 && d < 22 && !Wd.blocked(G.room, e.x, e.z, T.x, T.z)) { var w = 1.25 * e.slowAtk * e.windK; go(e, 'windup', { wind: w }); C.tell({ shape: 'line', x: e.x, z: e.z, ang: e.facing, len: 26, w: 0.6, delay: w, dmg: 0, src: e, follow: { e: e }, col: RED }); W.audio.sfx('tellBeep'); }
+      } else if (e.state === 'windup') {
+        if (e.st < e.wind * 0.72) face(e, a, 3.2, dt);
+        if (e.st >= e.wind) {
+          go(e, 'strike'); var fx = Math.sin(e.facing), fz = Math.cos(e.facing), len = 0;
+          while (len < 26 && !Wd.isSolid(G.room, e.x + fx * (len + 0.5), e.z + fz * (len + 0.5))) len += 0.5;
+          F.spawn(K.BEAM, { x: e.x + fx * len / 2, y: 1.2, z: e.z + fz * len / 2, sx: 0.4, sz: len / 2, rot: e.facing, col: 0xff5a3a, dur: 0.2, p: [0.8, 0, 0, 0] });
+          F.flashLight(e.x + fx * 1.5, 1.3, e.z + fz * 1.5, [1, 0.4, 0.3], 1.4, 0.12, 8); W.audio.sfx('rail', 0.7);
+          var hitOne = function (v, isP) { var dx = v.x - e.x, dz = v.z - e.z, al = dx * fx + dz * fz, pr = Math.abs(dx * fz - dz * fx); if (al > 0 && al < len && pr < 0.55 + v.r * 0.5) { if (isP) C.hurtPlayer(20, e, { kb: 8 }); else C.hitEnemy(v, 20, { src: 'tell', kb: 6, sx: e.x, sz: e.z }); } };
+          if (e.team === 1) hitOne(G.player, true); else G.enemies.forEach(function (o) { if (o.team === 1 && !o.dead) hitOne(o, false); });
+        }
+      } else if (e.state === 'strike') { if (e.st > 0.25) { go(e, 'recover', { recT: 0.9 }); e.cd = 3.0 * e.slowAtk; } }
+      else if (e.st >= e.recT) go(e, 'move');
+    },
+    netter: function (e, dt, T, d, a) {
+      if (e.state === 'move') {
+        e.cd -= dt; kite(e, T, d, a, 5.5, 10, dt); face(e, a, 6, dt);
+        if (e.cd <= 0 && d < 13) { go(e, 'windup', { wind: 0.55 }); W.audio.sfx('tellRatchet'); }
+      } else if (e.state === 'windup') {
+        if (e.st >= e.wind) {
+          var P = G.player, tx = T.x + (T === P ? Math.sin(P.moveAng) * P.speed * 0.3 : 0), tz = T.z + (T === P ? Math.cos(P.moveAng) * P.speed * 0.3 : 0), fl = 0.9;
+          C.shoot({ lob: fl, lt: 0, x: e.x, z: e.z, x0: e.x, z0: e.z, tx: tx, tz: tz, vx: 0, vz: 1, team: 'x', life: 9, col: 0xd8cdb4, wid: 0.4, len: 0.4, y: 2.2 });
+          C.tell({ shape: 'circle', x: tx, z: tz, r: 2.3, delay: fl, dmg: 3, kb: 0, team: 'p', src: e, keep: true, col: 0xd8cdb4, onFire: function (t) { F.spawn(K.RING, { x: t.x, y: 0.1, z: t.z, s: 2.3, col: 0xd8cdb4, dur: 0.3, p: [0.3, 0.14] }); W.audio.sfx('land', 0.5); }, onHit: function (v) { if (v === G.player) { v.snare = 2.6; F.text(v.x, 3.0, v.z, 'Snared', 'call', 0.9); if (!G.hinted.snare) { G.hinted.snare = true; W.ui.toast('Snared in a net. Dash to tear free.'); } } } });
+          W.audio.sfx('lob'); go(e, 'recover', { recT: 0.5 }); e.cd = 4.2 * e.slowAtk;
+        }
+      } else if (e.st >= e.recT) go(e, 'move');
+    },
+    shepherd: function (e, dt, T, d, a) {
+      var ally = e.ward;
+      if (!ally || ally.dead || W.dist(e.x, e.z, ally.x, ally.z) > 12) {
+        ally = null; var best = -1e9;
+        G.enemies.forEach(function (o) { if (o !== e && !o.dead && o.team === 1 && o.type !== 'shepherd' && o.type !== 'turret' && o.type !== 'rat' && o.spawnT <= 0 && !(o.guardT > 0 && o.wardBy !== e)) { var k = o.maxHp - W.dist(e.x, e.z, o.x, o.z) * 4; if (k > best) { best = k; ally = o; } } });
+        e.ward = ally;
+      }
+      var tx, tz;
+      if (d < 6) { tx = e.x - Math.sin(a) * 5; tz = e.z - Math.cos(a) * 5; }
+      else if (ally) { tx = ally.x + Math.sin(a) * 3.5 + Math.cos(G.time + e.phase) * 1.2; tz = ally.z + Math.cos(a) * 3.5 + Math.sin(G.time + e.phase) * 1.2; }
+      else { tx = e.x + Math.cos(G.time + e.phase) * 2; tz = e.z + Math.sin(G.time * 0.8 + e.phase) * 2; }
+      steer(e, tx, tz, e.speed * (d < 6 ? 1.2 : 0.85), dt); face(e, ally ? ang(ally.x - e.x, ally.z - e.z) : a, 5, dt);
+      if (ally && W.dist(e.x, e.z, ally.x, ally.z) < 10) {
+        ally.guardT = 0.3; ally.wardBy = e; e.beamT = (e.beamT || 0) - dt;
+        if (e.beamT <= 0) { e.beamT = 0.2; C.bolt(e.x, e.z, ally.x, ally.z, 0x7ab8ff); F.spawn(K.RING, { x: ally.x, y: 0.1, z: ally.z, s: ally.r + 0.8, col: 0x7ab8ff, dur: 0.22, p: [0.5, 0.08] }); }
+      }
+    },
+    hopper: function (e, dt, T, d, a) {
+      if (e.state === 'move') {
+        e.cd -= dt; steer(e, T.x - Math.sin(a + e.side * 0.8) * 6, T.z - Math.cos(a + e.side * 0.8) * 6, e.speed, dt); face(e, a, 8, dt);
+        if (e.cd <= 0 && d > 3 && d < 14) {
+          var P = G.player, lx = T.x + (T === P ? Math.sin(P.moveAng) * P.speed * 0.35 : 0), lz = T.z + (T === P ? Math.cos(P.moveAng) * P.speed * 0.35 : 0);
+          if (!Wd.isSolid(G.room, lx, lz)) {
+            var w = 0.5 * e.windK * e.slowAtk; go(e, 'windup', { wind: w, jx: lx, jz: lz });
+            C.tell({ shape: 'circle', x: lx, z: lz, r: 2.5, delay: w + 0.45, dmg: 16, kb: 9, src: e, col: RED, onFire: function (t) { F.spawn(K.RING, { x: t.x, y: 0.1, z: t.z, s: 2.6, col: 0xdfe8e4, dur: 0.25, p: [0.25, 0.16] }); F.addShake(0.2); W.audio.sfx('land'); } });
+            W.audio.sfx('tellServo');
+          } else e.cd = 0.4;
+        }
+      } else if (e.state === 'windup') { e.jx0 = e.x; e.jz0 = e.z; if (e.st >= e.wind) { go(e, 'strike'); W.audio.sfx('lunge'); } }
+      else if (e.state === 'strike') {
+        var k = W.sat(e.st / 0.45); e.x = W.lerp(e.jx0, e.jx, k); e.z = W.lerp(e.jz0, e.jz, k); e.jumpY = Math.sin(k * Math.PI) * 3.2; e.kvx = e.kvz = 0;
+        if (k >= 1) { e.jumpY = 0; go(e, 'recover', { recT: 1.15 }); e.cd = 2.2 + Math.random(); e.side = -e.side; }
+      } else if (e.st >= e.recT) go(e, 'move');
+    },
     scav: function (e, dt, T, d, a) {
       if (e.state === 'move') {
         steer(e, T.x, T.z, e.speed, dt); face(e, a, 6, dt);
@@ -224,7 +348,8 @@
       if (e.boss) { W.boss.update(e, dt); continue; }
       // statuses
       e.flash = Math.max(0, e.flash - dt * 8); e.slow = Math.max(0, e.slow - dt); e.root = Math.max(0, e.root - dt); e.stagger = Math.max(0, e.stagger - dt);
-      e.mark = Math.max(0, e.mark - dt); e.tag = Math.max(0, e.tag - dt); e.wreck = Math.max(0, (e.wreck || 0) - dt);
+      e.mark = Math.max(0, e.mark - dt); e.tag = Math.max(0, e.tag - dt); e.wreck = Math.max(0, (e.wreck || 0) - dt); e.guardT = Math.max(0, (e.guardT || 0) - dt);
+      if (e.hasty) e.cd -= dt * 0.6;
       if (e.hijackT) { e.hijackT -= dt; if (e.hijackT <= 0) { C.hitEnemy(e, 999, { src: 'cull', quiet: true }); continue; } }
       E.statusTick(e, dt);
       if (e.dead) continue;
@@ -261,7 +386,7 @@
         if (dd < min && dd > 0.001) { var push = (min - dd) / 2; dx /= dd; dz /= dd; if (!a2.fixed && !a2.boss) { a2.x -= dx * push; a2.z -= dz * push; } if (!b.fixed && !b.boss) { b.x += dx * push; b.z += dz * push; } }
       }
       // body block against the player (dash passes through)
-      if (!a2.fly && P.alive && P.state !== 'dash' && P.state !== 'leap' && a2.team === 1) {
+      if (!a2.fly && P.alive && P.state !== 'dash' && P.state !== 'leap' && P.state !== 'slash' && a2.team === 1 && !(a2.jumpY > 0.3)) {
         var px = P.x - a2.x, pz = P.z - a2.z, pd = Math.hypot(px, pz), pm = P.r + a2.r * 0.8;
         if (pd < pm && pd > 0.001) { var ps = pm - pd; P.x += px / pd * ps; P.z += pz / pd * ps; Wd.resolve(room, P, P.r); }
       }
@@ -286,7 +411,8 @@
     var rig = e.rig, p = rig.parts, t = G.time, room = G.room;
     var fy = e.fly ? 0 : Wd.floorY(room, e.x, e.z);
     e.py = W.damp(e.py === undefined ? fy : e.py, fy, 14, dt);
-    rig.root.position.set(e.x, e.py + (e.attached ? 0.5 : 0), e.z);
+    if (e.jumpY && (e.stun > 0 || e.state !== 'strike')) e.jumpY = 0;
+    rig.root.position.set(e.x, e.py + (e.attached ? 0.5 : 0) + (e.jumpY || 0), e.z);
     var moving = Math.hypot(e.mvx, e.mvz);
     e.phase += moving * dt * 1.5;
     if (e.type !== 'turret' && e.type !== 'spitter') rig.root.rotation.y = W.angDamp(rig.root.rotation.y, e.facing, 16, dt);
@@ -298,6 +424,11 @@
       if (e.type === 'bruiser') { st.sub = 5; if (e.atk === 'charge' && act) st.act = 'dash'; }
       if (e.type === 'ghost') { st.sub = 1; rig.mats.body.uniforms.uCloak.value = e.cloak > 0.05 ? e.cloak : 0; }
       if (e.type === 'scav' && act === 'strike') st.act = 'hold';
+      if (e.type === 'sniper') { st.sub = 3; if (act) st.act = 'hold'; }
+      if (e.type === 'welder') { st.sub = 3; if (act === 'strike') st.act = 'hold'; }
+      if (e.type === 'bomber' && act === 'windup') st.act = 'charge';
+      if (e.type === 'netter') st.sub = 2;
+      if (e.type === 'hopper') { if (act === 'windup') st.act = 'kneel'; else if (act === 'strike') st.act = 'dash'; }
       M.poseHuman(rig, st, dt);
     } else if (e.type === 'leech') {
       p.rotor.rotation.y = t * 40; p.body.position.y = 1.1 + Math.sin(t * 6 + e.rnd * 9) * 0.12 + (e.state === 'windup' ? 0.35 : 0); p.body.rotation.x = e.state === 'windup' ? -0.6 : (e.state === 'strike' ? 0.7 : 0.1);
@@ -309,6 +440,9 @@
       p.tube.rotation.y = e.facing; p.tube.rotation.x = W.damp(p.tube.rotation.x, e.state === 'windup' ? 0.75 : 0.35, 12, dt); var sq = e.state === 'windup' ? 1 + Math.sin(e.st * 30) * 0.05 : 1 + Math.sin(t * 2 + e.rnd * 5) * 0.02; p.body.scale.set(sq, 2 - sq, sq);
     } else if (e.type === 'turret') { p.head.rotation.y = e.facing; p.head.position.y = 0.9 + (e.state === 'strike' ? Math.sin(t * 60) * 0.03 : 0); }
     else if (e.type === 'patch') { p.body.position.y = 1.9 + Math.sin(t * 3 + e.rnd * 7) * 0.2; p.body.rotation.z = Math.sin(t * 2) * 0.15; }
+    else if (e.type === 'shepherd') { p.body.position.y = 2.1 + Math.sin(t * 2.4 + e.rnd * 7) * 0.18; p.body.rotation.y = t * 1.5; }
+    else if (e.type === 'rat') { p.body.position.y = 0.24 + Math.abs(Math.sin(e.phase * 3)) * 0.1 + (e.state === 'windup' ? 0.12 : 0); p.body.rotation.x = e.state === 'windup' ? -0.5 : 0; }
+    else if (e.type === 'crab') { var cw = e.state === 'windup' ? -0.9 * W.sat(e.st / (e.wind || 1)) : (e.state === 'strike' ? 0.5 : Math.sin(t * 3 + e.rnd * 5) * 0.12); p.clawL.rotation.x = W.damp(p.clawL.rotation.x, cw, 25, dt); p.clawR.rotation.x = W.damp(p.clawR.rotation.x, cw, 25, dt); p.body.position.y = 0.55 + Math.abs(Math.sin(e.phase * 2)) * 0.06; p.body.rotation.z = Math.sin(e.phase * 2) * 0.06; }
     if (e.stun > 0 && !rig.human) rig.root.rotation.z = Math.sin(t * 30) * 0.06; else if (!rig.human) rig.root.rotation.z = 0;
     M.setFlash(rig, e.flash);
     if (!e.elite && e.team === 1) { var g = e.tox > 0 ? 0.25 : 0; M.setGlow(rig, e.mark > 0 ? 0.4 : 0, g, 0); }

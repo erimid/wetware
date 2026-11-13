@@ -138,6 +138,37 @@
     } else if (kind === 'blade') {
       b.add(lathe([[0.0, -1.25], [0.05, -0.9], [0.08, -0.2], [0.03, -0.1], [0, -0.1]], 4), { s: [1, 1, 0.3] }, 0xd8e4e8, 1);
       b.add(cyl(0.05, 0.2, 8), { p: [0, 0, 0] }, 0x22262a, 0);
+      if (o.glow) { b.add(rbox(0.035, 0.8, 0.06, 0.012), { p: [0, -0.62, 0] }, o.glow, 2, { emis: 1 }); b.add(rbox(0.2, 0.05, 0.08, 0.02), { p: [0, -0.12, 0] }, 0x59636a, 1); }
+    } else if (kind === 'whip') {
+      b.add(cyl(0.06, 0.34, 10), { p: [0, 0.0, 0] }, 0x8a5a2a, 0);
+      b.add(cyl(0.085, 0.07, 10), { p: [0, -0.2, 0] }, 0x9aa4a8, 1);
+      b.add(tube([[0, -0.2, 0], [0.05, -0.6, 0.1], [0.22, -0.95, 0.05], [0.3, -1.3, -0.12], [0.16, -1.6, -0.3], [-0.1, -1.72, -0.22]], 0.04, 26, 6), {}, 0x39424a, 1);
+      for (var wi = 0; wi < 5; wi++) b.add(tor(0.07, 0.024), { p: [[0.03, 0.14, 0.27, 0.26, 0.05][wi], -0.42 - wi * 0.3, [0.05, 0.08, -0.03, -0.2, -0.28][wi]], r: [Math.PI / 2, 0, 0] }, 0x9aa4a8, 1);
+      b.add(cone(0.08, 0.26, 6), { p: [-0.14, -1.74, -0.2], r: [0, 0, 1.9] }, o.glow || 0xff8a5a, 2, { emis: 1 });
+    } else if (kind === 'spear') {
+      b.add(cyl(0.042, 2.9, 10), { p: [0, -0.55, 0] }, 0x4a3a2c, 0);
+      b.add(cyl(0.07, 0.3, 10), { p: [0, 0.0, 0] }, 0x8a5a2a, 0);
+      b.add(lathe([[0.0, -2.75], [0.07, -2.4], [0.12, -2.05], [0.05, -1.98], [0, -1.98]], 4), { s: [1, 1, 0.4] }, 0xd8e4e8, 1);
+      b.add(tor(0.075, 0.028), { p: [0, -1.9, 0], r: [Math.PI / 2, 0, 0] }, o.glow || 0xb8a0ff, 2, { emis: 1 });
+      b.add(tor(0.075, 0.028), { p: [0, -1.76, 0], r: [Math.PI / 2, 0, 0] }, o.glow || 0xb8a0ff, 2, { emis: 1 });
+      b.add(sph(0.07, 8, 6), { p: [0, 0.92, 0] }, 0x9aa4a8, 1);
+    } else if (kind === 'rivet') {
+      b.add(rbox(0.24, 0.8, 0.32, 0.06), { p: [0, -0.3, 0.04] }, 0x4a5258, 1, { grad: 0x7a868c });
+      b.add(cyl(0.12, 0.75, 12), { p: [0, -1.0, 0.02] }, 0x22262a, 1);
+      b.add(cyl(0.15, 0.1, 12), { p: [0, -1.36, 0.02] }, 0xd9a520, 0);
+      b.add(cyl(0.19, 0.22, 12), { p: [0, -0.3, 0.26], r: [0, 0, Math.PI / 2] }, 0x8a4a2a, 0);
+      b.add(rbox(0.1, 0.34, 0.16, 0.04), { p: [0, 0.22, 0.06], r: [0.25, 0, 0] }, 0x8a5a2a, 0);
+      b.add(sph(0.07, 8, 6), { p: [0, -0.62, -0.14] }, o.glow || 0xffb347, 2, { emis: 1 });
+    } else if (kind === 'pistol') {
+      b.add(rbox(0.1, 0.42, 0.16, 0.035), { p: [0, -0.2, 0.02] }, 0x39424a, 1, { grad: 0x66747c });
+      b.add(cyl(0.04, 0.42, 8), { p: [0, -0.56, 0.0] }, 0x1c2026, 1);
+      b.add(rbox(0.09, 0.2, 0.12, 0.03), { p: [0, 0.06, 0.08], r: [0.3, 0, 0] }, 0x8a5a2a, 0);
+      b.add(sph(0.045, 8, 6), { p: [0, -0.3, -0.09] }, o.glow || 0xffd070, 2, { emis: 1 });
+    } else if (kind === 'fist') {
+      b.add(rbox(0.4, 0.46, 0.4, 0.11), { p: [0, -0.02, 0.0] }, 0x4a5258, 1, { grad: 0x7a868c });
+      b.add(rbox(0.44, 0.1, 0.44, 0.04), { p: [0, 0.18, 0] }, 0xd9a520, 0);
+      b.add(cyl(0.07, 0.4, 8), { p: [0.21, 0.2, 0] }, 0xc8d0d0, 1); b.add(cyl(0.07, 0.4, 8), { p: [-0.21, 0.2, 0] }, 0xc8d0d0, 1);
+      b.add(rbox(0.34, 0.1, 0.34, 0.035), { p: [0, -0.27, 0] }, o.glow || 0xff7a3a, 2, { emis: 0.9 });
     } else if (kind === 'shield') {
       b.add(rbox(1.25, 1.75, 0.12, 0.05), { p: [0, -0.5, 0.42] }, 0x3a4650, 1, { grad: 0x56666e });
       b.add(rbox(1.0, 0.2, 0.14, 0.03), { p: [0, 0.05, 0.43] }, 0xe6e0d0, 0);
@@ -247,7 +278,7 @@
     } else if (o.head === 'cap' || o.head === 'brim' || o.head === 'phones' || o.head === 'bald') {
       b.add(sph(0.19, 14, 10), { s: [1, 1.1, 1] }, c.skin, 0);
       if (o.head === 'cap') b.add(sph(0.2, 14, 8), { p: [0, 0.07, 0], s: [1.02, 0.7, 1.02] }, c.helm, 0);
-      if (o.head === 'brim') { b.add(lathe([[0.02, 0.26], [0.17, 0.22], [0.2, 0.1], [0.42, 0.06], [0.42, 0.03], [0.02, 0.05]], 16), {}, c.helm, 3); }
+      if (o.head === 'brim') { var br = o.brimR || 0.42; b.add(lathe([[0.02, 0.26], [0.17, 0.22], [0.2, 0.1], [br, 0.06], [br, 0.03], [0.02, 0.05]], 16), {}, c.helm, 3); if (o.hatBand) b.add(lathe([[0.19, 0.1], [0.215, 0.14], [0.19, 0.18]], 14), {}, o.hatBand, 0); }
       if (o.head === 'phones') { b.add(tor(0.2, 0.035, Math.PI), { p: [0, 0.03, 0] }, c.helm, 1); b.add(cyl(0.09, 0.08, 10), { p: [-0.2, 0, 0], r: [0, 0, Math.PI / 2] }, c.helm, 1); b.add(cyl(0.09, 0.08, 10), { p: [0.2, 0, 0], r: [0, 0, Math.PI / 2] }, c.helm, 1); b.add(sph(0.19, 12, 8), { p: [0, 0.06, -0.02], s: [1, 0.8, 1] }, 0x1a1620, 0); }
       b.add(rbox(0.26, 0.06, 0.08, 0.02), { p: [0, 0.03, 0.16] }, c.eye, 2, { emis: 0.6 });
       b.add(rbox(0.18, 0.12, 0.12, 0.04), { p: [0, -0.1, 0.14] }, c.mask || 0x9fd0c0, 0);
@@ -302,6 +333,13 @@
   var H = {
     kestrel: function () { return humanoid({ head: 'hood', hood: 0x2c3a46, hood2: 0x44586a, eye: 0xffb347, coat: 0x2a343c, coat2: 0x3c4a54, leg: 0x1e252c, leg2: 0x2c363e, boot: 0x14181c, glove: 0xc8963c, belt: 0x8a5a2a, belt2: 0xd9a520, hand: 1.1, cuff: 0xd9a520, detail: true, collar: 0xb8741a, band: 0x8a5a2a, pouch: 0x7a5228, strap: 0x9a6a2e, cape: { col: 0x16262e, col2: 0x2c4a56, trim: 0xe09a2a, len: 1.15, w: 0.56, front: true, gap: 3.3, mgap: 1.9, msize: 0.62, mantle: 0xb8741a, mantle2: 0xdc9a2c, clasp: 0xd9a520 } }); },
     marrow: function () { return humanoid({ head: 'hood', hood: 0xe8e2d2, hood2: 0xfaf6ea, eye: 0xff3028, coat: 0x8a2a22, coat2: 0xb8402e, leg: 0x2a2224, leg2: 0x3a2e30, boot: 0x14181c, glove: 0x1c1c22, belt: 0x14161a, belt2: 0xff3028, hand: 1.2, cuff: 0xff3028, cape: { col: 0xc8c0ae, col2: 0xf0ead8, trim: 0x8a2a22, len: 1.2, w: 0.66, mantle: 0x9a2018, mantle2: 0xc83a28 } }); },
+    vesper: function () { return humanoid({ bulk: 0.92, scale: 1.03, head: 'brim', brimR: 0.3, hatBand: 0xffd070, helm: 0x2a2220, skin: 0xb98a6a, eye: 0xffd070, mask: 0xd8cdb4, coat: 0x7a2e22, coat2: 0xa8442e, leg: 0x24242a, leg2: 0x36363e, boot: 0x16161a, glove: 0x2a2220, belt: 0x1c1c1c, belt2: 0xffd070, hand: 1.05, cuff: 0xd8cdb4, detail: true, bracerArm: 2, guard: 0x2a2220, guard2: 0x4a4038, holster: 0x4a3020, collar: 0xd8cdb4, pouch: 0x4a3020, pouch2: 0x2a2220, strap: 0x2a2220, cape: { col: 0xb8ad94, col2: 0xe8dfc8, trim: 0x7a2e22, len: 0.85, w: 0.4, front: true, gap: 4.3, mgap: 2.6, msize: 0.45, mantle: 0xd8cdb4, mantle2: 0xf0e8d0 } }); },
+    bram: function () { return humanoid({ bulk: 1.45, scale: 1.13, head: 'weld', helm: 0xd9a520, helm2: 0xf2c84a, eye: 0xff7a3a, coat: 0x39444c, coat2: 0x56666e, leg: 0x2a2e34, leg2: 0x3a4048, boot: 0x14181c, glove: 0x8a5a2a, pads: true, pad: 0xd9a520, belt: 0x8a2a1a, belt2: 0xff7a3a, detail: true, arm: 1.2, hand: 1.2, pack: 'frame', core: true, bracerArm: 2, guard: 0x8a6a1a, guard2: 0xd9a520, collar: 0x2a2e34, pouch: 0x8a2a1a, strap: 0x8a2a1a }); },
+    bomber: function () { return humanoid({ bulk: 1.1, head: 'dive', helm: 0xb8402a, helm2: 0xe8703a, eye: 0xfff2a0, coat: 0x5a3a2a, coat2: 0x7a5238, leg: 0x2c2a28, boot: 0x1a1c1c, glove: 0x2a2a2a, belt: 0xd9a520, hand: 1.2, pack: 'tank', packCol: 0xb8402a, core: true }); },
+    welder: function () { return humanoid({ bulk: 1.3, scale: 1.08, head: 'weld', helm: 0x4a5258, helm2: 0x7a868c, eye: 0xffb347, coat: 0x6a4a22, coat2: 0x8a6a32, leg: 0x2a2a2c, boot: 0x141414, glove: 0x39424a, pads: true, pad: 0x4a5258, weapon: 'welder', pack: 'tank', packCol: 0x39424a, hand: 1.15 }); },
+    sniper: function () { return humanoid({ bulk: 0.85, scale: 1.1, head: 'slit', helm: 0xd8d2c4, eye: 0xff3a3a, accent: 0x39424a, coat: 0x4a4038, coat2: 0x6a5a4a, coatType: 3, leg: 0x26221e, boot: 0x0e1014, glove: 0x1c1c1c, weapon: 'carbine', hand: 0.95 }); },
+    netter: function () { return humanoid({ bulk: 1.1, head: 'brim', helm: 0x3a4a44, skin: 0x8a6a54, eye: 0xe8e0c8, mask: 0x4a5a52, coat: 0x2e4a52, coat2: 0x44686e, leg: 0x22282a, boot: 0x141414, glove: 0x8a5a2a, hand: 1.2, cape: { col: 0x4a4a3a, col2: 0x6a6a52, len: 0.8, w: 0.5 } }); },
+    hopper: function () { return humanoid({ bulk: 0.85, scale: 0.98, head: 'flathelm', helm: 0x2e6a5a, eye: 0xfff2a0, coat: 0x24423c, coat2: 0x35625a, leg: 0x39424a, leg2: 0x59636a, boot: 0x8a949a, glove: 0x1c2626, weapon: 'blade', hand: 1.0 }); },
     scav: function () { return humanoid({ bulk: 1.18, head: 'dive', helm: 0x9a7a3a, helm2: 0xd8b25a, eye: 0xff5a2a, coat: 0x4a5a44, coat2: 0x6a7a5a, leg: 0x2c3430, boot: 0x1a1c1c, glove: 0x8a4a2a, belt: 0x8a2a1a, hand: 1.25, weapon: 'pipe', pack: 'tank' }); },
     warden: function () { return humanoid({ bulk: 1.25, scale: 1.12, head: 'flathelm', helm: 0xe6e0d0, eye: 0x9ff4ff, coat: 0x2a3a52, coat2: 0x3e5270, leg: 0x1c2430, boot: 0x101418, glove: 0xe6e0d0, pads: true, pad: 0xe6e0d0, belt: 0xd9a520, weapon: 'shield', hand: 1.2 }); },
     ghost: function () { return humanoid({ bulk: 0.8, scale: 1.06, head: 'slit', helm: 0x1c2630, eye: 0xff3a3a, accent: 0x8a2030, coat: 0x1c2630, coat2: 0x2e3e4c, coatType: 3, leg: 0x161c24, boot: 0x0e1014, glove: 0x8a2030, weapon: 'blade', blade2: true, hand: 0.9 }); },
@@ -374,6 +412,43 @@
     t.part('body', null, b, [0, 1.9, 0]);
     t.h = 2.4; return t;
   }
+  function rat() {
+    var t = new Tpl(), b = new Bld();
+    b.add(lathe([[0, 0.44], [0.13, 0.3], [0.2, 0.02], [0.17, -0.28], [0, -0.4]], 10), { r: [Math.PI / 2, 0, 0], s: [1, 1, 0.9] }, 0x3e342e, 3, { grad: 0x6a5a4a });
+    b.add(sph(0.045, 6, 5), { p: [-0.07, 0.07, 0.36] }, 0xff3a20, 2, { emis: 1 }); b.add(sph(0.045, 6, 5), { p: [0.07, 0.07, 0.36] }, 0xff3a20, 2, { emis: 1 });
+    b.add(sph(0.07, 6, 5), { p: [-0.1, 0.16, 0.2], s: [1, 1, 0.4] }, 0x8a5a4a, 0); b.add(sph(0.07, 6, 5), { p: [0.1, 0.16, 0.2], s: [1, 1, 0.4] }, 0x8a5a4a, 0);
+    b.add(tube([[0, 0.0, -0.36], [0.06, 0.02, -0.6], [-0.04, 0.08, -0.82]], 0.03, 8, 5), {}, 0x8a5a4a, 0);
+    b.add(rbox(0.26, 0.05, 0.2, 0.02), { p: [0, 0.2, -0.05] }, 0x59636a, 1);
+    t.part('body', null, b, [0, 0.24, 0]); t.h = 0.6; return t;
+  }
+  function crab() {
+    var t = new Tpl(), b = new Bld();
+    b.add(sph(0.62, 16, 10), { s: [1.25, 0.5, 1] }, 0x7a3e24, 3, { grad: 0xb8623a });
+    b.add(cyl(0.035, 0.3, 6), { p: [-0.2, 0.3, 0.46] }, 0x14181c, 1); b.add(cyl(0.035, 0.3, 6), { p: [0.2, 0.3, 0.46] }, 0x14181c, 1);
+    b.add(sph(0.075, 8, 6), { p: [-0.2, 0.47, 0.46] }, 0xfff2a0, 2, { emis: 1 }); b.add(sph(0.075, 8, 6), { p: [0.2, 0.47, 0.46] }, 0xfff2a0, 2, { emis: 1 });
+    for (var i = 0; i < 6; i++) { var sx = i < 3 ? -1 : 1, zz = ((i % 3) - 1) * 0.42 - 0.1; b.add(tube([[sx * 0.55, 0, zz], [sx * 1.0, 0.25, zz * 1.2], [sx * 1.2, -0.5, zz * 1.4]], 0.06, 8, 6), {}, 0x5a2e1c, 1); }
+    t.part('body', null, b, [0, 0.55, 0]);
+    b = new Bld();
+    b.add(lathe([[0, 0.5], [0.45, 0.42], [0.82, 0.16], [0.9, -0.02], [0.86, -0.08]], 16), { s: [1.2, 1, 1] }, 0x6a747a, 1, { grad: 0xa8b2b6 });
+    b.add(rbox(1.5, 0.52, 0.16, 0.05), { p: [0, 0.02, 0.84] }, 0x59636a, 1, { grad: 0x8a949a });
+    b.add(rbox(1.3, 0.14, 0.18, 0.03), { p: [0, 0.04, 0.85] }, 0xd9a520, 0);
+    t.part('shell', 'body', b, [0, 0.08, 0]);
+    [['clawL', -1], ['clawR', 1]].forEach(function (d) {
+      b = new Bld();
+      b.add(rbox(0.3, 0.26, 0.6, 0.08), { p: [0, 0, 0.3] }, 0xb8623a, 3, { grad: 0xe8843a });
+      b.add(cone(0.14, 0.5, 6), { p: [d[1] * 0.08, 0.06, 0.6], r: [Math.PI / 2, 0, 0] }, 0xe8e0d0, 1); b.add(cone(0.11, 0.42, 6), { p: [-d[1] * 0.08, -0.08, 0.6], r: [Math.PI / 2, 0, 0] }, 0xe8e0d0, 1);
+      t.part(d[0], 'body', b, [d[1] * 0.62, -0.02, 0.62]);
+    });
+    t.h = 1.3; return t;
+  }
+  function shepherd() {
+    var t = new Tpl(), b = new Bld();
+    b.add(lathe([[0, 0.42], [0.5, 0.2], [0.78, 0.04], [0.74, 0.0], [0, 0.06]], 16), {}, 0xb8402a, 3, { grad: 0xe8dfc8 });
+    b.add(cyl(0.3, 0.16, 12), { p: [0, -0.06, 0] }, 0xe6e0d0, 1);
+    b.add(sph(0.2, 12, 8), { p: [0, -0.22, 0] }, 0x7ab8ff, 2, { emis: 1 });
+    for (var i = 0; i < 3; i++) { var a = i * 2.094; b.add(tube([[Math.sin(a) * 0.28, -0.08, Math.cos(a) * 0.28], [Math.sin(a) * 0.6, -0.3, Math.cos(a) * 0.6], [Math.sin(a) * 0.5, -0.56, Math.cos(a) * 0.5]], 0.035, 8, 5), {}, 0x39424a, 1); b.add(sph(0.06, 6, 5), { p: [Math.sin(a) * 0.5, -0.58, Math.cos(a) * 0.5] }, 0x7ab8ff, 2, { emis: 1 }); }
+    t.part('body', null, b, [0, 2.1, 0]); t.h = 2.6; return t;
+  }
   // the Dredge: hull + rotating turret arm with a bucket
   function dredge() {
     var t = new Tpl(), b = new Bld();
@@ -417,7 +492,7 @@
     t.part('body', null, b, [0, 0, 0]); return t;
   }
 
-  var MAKERS = { leech: leech, hound: hound, spitter: spitter, turret: turret, patch: patch, dredge: dredge, aircraft: aircraft, tagdrone: tagDrone };
+  var MAKERS = { rat: rat, crab: crab, shepherd: shepherd, leech: leech, hound: hound, spitter: spitter, turret: turret, patch: patch, dredge: dredge, aircraft: aircraft, tagdrone: tagDrone };
   // returns { root, parts, mats, kind, human }
   M.make = function (kind, opts) {
     var r;

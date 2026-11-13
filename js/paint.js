@@ -218,6 +218,8 @@
   // o: bg, skin, coat, hat:{type,col}, eyes:{type,col}, mouth type, rim col, extra
   P.portraitDefs = {
     kestrel: { bg: '#16323a', coat: '#2a3a44', skin: '#2a3a44', hood: '#33474f', eyes: 'goggles', eyeCol: '#ffb347', mask: 'resp', rim: '#3fe0d0', name: 'Kestrel' },
+    vesper: { bg: '#3a1c14', coat: '#7a2e22', skin: '#b98a6a', hat: 'brim', hatCol: '#2a2220', eyes: 'squint', eyeCol: '#141414', mask: 'chin', rim: '#ffd070', name: 'Vesper Quill', hair: '#2a2220' },
+    bram: { bg: '#2a2410', coat: '#39444c', skin: '#3a3a3a', hat: 'helm', hatCol: '#d9a520', eyes: 'visor', eyeCol: '#ff7a3a', mask: 'jaw', rim: '#ff7a3a', name: 'Bram Tolliver' },
     ruen: { bg: '#1c3a2c', coat: '#d8d4c0', skin: '#b98a6a', hat: 'cap', hatCol: '#7fb6a0', eyes: 'loupe', eyeCol: '#8fffb0', mask: 'chin', rim: '#8fffb0', name: 'Mother Ruen', hair: '#d9d9d2' },
     pike: { bg: '#2a2440', coat: '#c8502a', skin: '#8a5a44', hat: 'phones', hatCol: '#e8d24a', eyes: 'visor', eyeCol: '#49d3ff', rim: '#ffb347', name: 'Pike', hair: '#1a1620' },
     brine: { bg: '#3a2a1c', coat: '#4a5a3a', skin: '#a07a5a', hat: 'brim', hatCol: '#2a2e22', eyes: 'patch', eyeCol: '#e8e0c8', mask: 'beard', rim: '#ffb347', name: 'Brine', hair: '#8a8a80' },

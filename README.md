@@ -14,12 +14,20 @@ Open `index.html` in a browser. No build step and no server needed. The only net
 | Move / aim | WASD / mouse |
 | Attack / special | Left / right mouse button |
 | Dash | Space |
-| Tag drone | Q |
+| Courier skill (tag drone, fan fire or grapple) | Q |
 | Vent heat | E |
 | Active implant | F |
 | Body grid | Tab |
 
 A gamepad also works.
+
+## Couriers
+
+Talk to the other couriers in the clinic to play as them.
+
+- **Kestrel**, courier: quick blink dash, tag drone, arc baton
+- **Vesper Quill**, gunhand: two rolls that load hot shots, fan fire, twin pistols
+- **Bram Tolliver**, breaker: shoulder ram, grapple and throw, piston gauntlets, thrives in redline
 
 ## Debug URLs
 
@@ -28,6 +36,9 @@ A gamepad also works.
 - `?state=hub|area1|boss1|area2|boss2|grid|end` jumps to a point in the game
 - `?view=wide|kestrel|boss1|boss2` sets a fixed camera
 - `?t=<seconds>` freezes time
+- `?char=kestrel|vesper|bram` picks the courier
+- `?weapon=baton|carbine|hammer|whip|blades|spear|rivet` picks the weapon
+- `?door=shrine|risk` forces a door reward
 - `?fresh=1` clears the save
 - `?meta=fresh|mid|full` sets the meta progress
 

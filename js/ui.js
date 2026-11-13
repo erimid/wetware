@@ -60,7 +60,8 @@
     set('heatn', P.redline ? 'Redline' : (P.inWater && P.heat > 1 ? 'Cooling' : Math.round(P.heat) + ''), function (v) { el.heatnum.textContent = v; });
     set('red', P.redline, function (v) { el.heatbar.classList.toggle('red', v); });
     set('pips', P.maxDashes + ':' + P.dashes, function () { var h = ''; for (var i = 0; i < P.maxDashes; i++) h += '<span class="' + (i < P.dashes ? 'on' : '') + '"></span>'; el.pips.innerHTML = h; });
-    set('tagcd', Math.round(P.tagCd / 7 * 20), function (v) { el.slotTag.querySelector('u').style.height = (v * 5) + '%'; });
+    set('qname', G.run.char, function () { var c = W.combat.char(); U.defaultHint = U.defaultHint.replace(/<b>Q<\/b> [^·]*·/, '<b>Q</b> ' + c.qShort + ' ·'); if (!el.hint.classList.contains('alert')) el.hint.innerHTML = U.defaultHint; });
+    set('tagcd', Math.round(P.tagCd / (P.tagMax || 7) * 20), function (v) { el.slotTag.querySelector('u').style.height = (v * 5) + '%'; });
     var act = G.B.active;
     set('act', act, function (v) { el.slotAct.classList.toggle('off', !v); var x = el.slotAct.querySelector('canvas').getContext('2d'); x.clearRect(0, 0, 64, 64); if (v) { x.drawImage(Pt.icon('implant', v === 'emp' ? '#49d3ff' : '#ff4058'), 0, 0); } });
     set('actcd', act ? Math.round(P.activeCd / (act === 'emp' ? 12 : 8) * 20) : 0, function (v) { el.slotAct.querySelector('u').style.height = (v * 5) + '%'; });
@@ -287,7 +288,7 @@
     x.drawImage(bodyLayer(cs, gx, gy), 0, 0);
     x.lineJoin = 'round'; x.lineCap = 'round';
     x.fillStyle = INK; x.font = '900 34px "Big Shoulders Display", Impact, sans-serif'; x.textAlign = 'left'; x.textBaseline = 'alphabetic'; x.fillText('BODY GRID', 30, 52);
-    x.font = '500 16px "Barlow Condensed", sans-serif'; x.fillText('Kestrel, courier. Rebuilt by Mother Ruen. ' + D.CELLS.filter(function (c) { return c[3] <= run.cellTier; }).length + ' graft sites open.', 32, 76);
+    x.font = '500 16px "Barlow Condensed", sans-serif'; x.fillText(W.combat.char().blurb + ' ' + D.CELLS.filter(function (c) { return c[3] <= run.cellTier; }).length + ' graft sites open.', 32, 76);
     // cells
     D.CELLS.forEach(function (c) {
       var px = gx + c[0] * cs + 3, py = gy + c[1] * cs + 3, w = cs - 6, open = c[3] <= run.cellTier;

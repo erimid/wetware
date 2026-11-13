@@ -12,18 +12,25 @@
   var WAVES = {
     sumps: [
       [['scav', 'scav', 'scav']],
-      [['hound', 'hound'], ['hound', 'scav', 'scav'], ['hound', 'hound', 'scav']],
-      [['leech', 'leech', 'leech', 'leech', 'leech'], ['leech', 'leech', 'leech', 'scav', 'hound'], ['leech', 'leech', 'leech', 'leech', 'scav', 'scav']],
-      [['spitter', 'scav'], ['spitter', 'hound', 'hound', 'leech', 'leech'], ['spitter', 'scav', 'scav', 'hound']],
-      [['E:scav', 'leech', 'leech'], ['hound', 'hound', 'spitter'], ['E:hound', 'scav', 'leech', 'leech']]
+      [['hound', 'hound'], ['rat*6'], ['hound', 'scav', 'scav', 'rat*4']],
+      [['leech*4'], ['bomber', 'bomber'], ['leech*3', 'bomber', 'scav', 'scav']],
+      [['crab'], ['spitter', 'scav', 'rat*3'], ['crab', 'hound', 'hound', 'spitter']],
+      [['welder'], ['E:scav', 'leech', 'leech', 'bomber'], ['E:hound', 'welder', 'rat*4']]
     ],
     market: [
-      [['warden'], ['warden', 'scav', 'scav'], ['warden', 'hound', 'hound', 'leech', 'leech']],
-      [['ghost', 'ghost'], ['ghost', 'hound', 'hound', 'leech', 'leech'], ['ghost', 'ghost', 'warden']],
-      [['rigger'], ['rigger', 'warden', 'leech', 'leech', 'leech'], ['rigger', 'ghost', 'scav', 'scav']],
-      [['bruiser'], ['patch', 'scav', 'scav', 'ghost'], ['warden', 'rigger', 'patch', 'hound'], ['bruiser', 'patch', 'ghost']]
+      [['warden'], ['hopper', 'hopper'], ['warden', 'hopper', 'scav', 'scav']],
+      [['ghost', 'ghost'], ['sniper', 'hound'], ['ghost', 'sniper', 'hound', 'hound']],
+      [['rigger'], ['netter', 'scav', 'scav'], ['rigger', 'netter', 'warden', 'leech', 'leech']],
+      [['bruiser'], ['shepherd', 'scav', 'scav', 'ghost'], ['warden', 'rigger', 'patch', 'sniper'], ['bruiser', 'shepherd', 'hopper']]
     ]
   };
+  // a harder room behind a risk door: the strongest of the area, led by elites
+  var RISK = {
+    sumps: [['E:crab', 'rat*5'], ['E:welder', 'bomber', 'bomber'], ['E:scav', 'E:hound', 'leech*3']],
+    market: [['E:warden', 'hopper', 'hopper'], ['E:ghost', 'sniper', 'shepherd'], ['E:bruiser', 'netter', 'patch']]
+  };
+  function expandWave(list) { var out = []; list.forEach(function (t) { var m = /^(.*)\*(\d+)$/.exec(t); if (m) { for (var i = 0; i < +m[2]; i++) out.push(m[1]); } else out.push(t); }); return out; }
+  G.setBounty = function () { var b = G.run.bounty; G.bossSpeed = b.fast ? 1.25 : 1; G.memMul = 1 + (b.elites ? 0.3 : 0) + (b.heal ? 0.3 : 0) + (b.crowd ? 0.3 : 0) + (b.fever ? 0.3 : 0); };
   var AREA_NAME = { sumps: 'The Sumps', market: 'The Market Decks' };
 
   // ---------------- boot ----------------
@@ -62,9 +69,13 @@
   // ---------------- runs ----------------
   G.newRun = function (seed) {
     var s = W.save, wk = s.weapon, vk = s.variant ? wk + s.variant : null;
-    if (P_.weapon && D.WEAPONS[P_.weapon]) { wk = P_.weapon; vk = null; }
+    var ck = D.CHARS[P_.char] ? P_.char : (D.CHARS[s.char] ? s.char : 'kestrel'), CH = D.CHARS[ck];
+    if (!D.WEAPONS[wk] || (D.WEAPONS[wk].char && D.WEAPONS[wk].char !== ck) || (P_.char && !P_.weapon && P_.char !== s.char)) { wk = CH.weapon; vk = null; }
+    if (P_.weapon && D.WEAPONS[P_.weapon]) { wk = P_.weapon; vk = P_.variant ? wk + P_.variant : null; }
+    var bnt = s.wins > 0 ? s.bounty : {}, hp0 = CH.hp + s.board.hp * 20 - (bnt.frail ? 30 : 0);
     var run = G.run = {
-      seed: seed, rng: W.makeRng(seed), areaIdx: 0, area: 'sumps', roomIdx: -1, fightIdx: 0, hp: 100 + s.board.hp * 20, maxHp: 100 + s.board.hp * 20, baseMaxHp: 100 + s.board.hp * 20, scrip: 0, implants: [], cellTier: s.board.cells,
+      char: ck, boons: [],
+      seed: seed, rng: W.makeRng(seed), areaIdx: 0, area: 'sumps', roomIdx: -1, fightIdx: 0, hp: hp0, maxHp: hp0, baseMaxHp: hp0, scrip: 0, implants: [], cellTier: s.board.cells,
       weapon: wk, variantKey: vk, wtier: 0, mods: [], modCrit: 0, modKb: 1, rig: null, deck: null, heat: 0,
       stats: { kills: 0, time: 0, dmgTaken: 0, rooms: 0, vents: 0, fusions: 0, redlines: 0, dodges: 0, memory: 0 },
       used: {}, defy: s.board.defy ? 1 : 0, rerolls: s.board.reroll, offers: 2 + (s.board.doors ? 1 : 0), lastFaction: null, snub: {},
@@ -72,7 +83,7 @@
     };
     run.rng.shuffle(run.bag.sumps); run.rng.shuffle(run.bag.market);
     G.rng = run.rng;
-    G.hpScale = 1; G.dmgScale = 1; G.bossSpeed = run.bounty.fast ? 1.25 : 1; G.memMul = 1 + (run.bounty.elites ? 0.3 : 0) + (run.bounty.heal ? 0.3 : 0);
+    G.hpScale = 1; G.dmgScale = 1; G.setBounty();
     G.rebuild();
     return run;
   };
@@ -80,10 +91,10 @@
     var run = G.run; G.B = D.computeBuild(run);
     var mh = run.baseMaxHp + G.B.maxHp; if (mh !== run.maxHp) { run.hp = Math.min(mh, run.hp + Math.max(0, mh - run.maxHp)); run.maxHp = mh; }
     run.modCrit = run.mods.indexOf('honed') >= 0 ? 0.15 : 0; run.modKb = run.mods.indexOf('shover') >= 0 ? 1.35 : 1;
-    if (G.player) { C.refreshGlow(G.player); G.player.maxDashes = 1 + (W.save.board.dash ? 1 : 0) + (run.rig === 'twin' ? 1 : 0); }
+    if (G.player) { C.refreshGlow(G.player); G.player.maxDashes = C.maxDashes(); }
   };
   G.gainMemory = function (n) { var v = n * (G.memMul || 1); G.memAcc = (G.memAcc || 0) + v; var w = Math.floor(G.memAcc); if (w > 0) { G.memAcc -= w; W.save.memory += w; if (G.run) G.run.stats.memory += w; } };
-  G.heal = function (n, quiet) { var run = G.run, P = G.player; if (run.bounty.heal) n = Math.ceil(n / 2); var b = run.hp; run.hp = Math.min(run.maxHp, run.hp + n); if (run.hp > b && P) { F.text(P.x, 2.8, P.z, '+' + Math.round(run.hp - b), 'heal', 0.8); if (!quiet) W.audio.sfx('heal', 1); } };
+  G.heal = function (n, quiet) { var run = G.run, P = G.player; if (run.bounty.heal) n = Math.ceil(n / 2); if (G.B && G.B.healMul) n = Math.ceil(n * (1 + G.B.healMul)); var b = run.hp; run.hp = Math.min(run.maxHp, run.hp + n); if (run.hp > b && P) { F.text(P.x, 2.8, P.z, '+' + Math.round(run.hp - b), 'heal', 0.8); if (!quiet) W.audio.sfx('heal', 1); } };
 
   // ---------------- rooms ----------------
   function clearWorld() {
@@ -102,7 +113,7 @@
     if (def.roof) u.uKeyDir.value.set(-0.7, -0.55, -0.3).normalize(); else u.uKeyDir.value.set(0.45, -1, -0.38).normalize();
     Gf.fitShadow(0, 0, Math.max(room.halfW, room.halfH) + 7);
     var P = G.player = C.makePlayer(room.spawn.x, room.spawn.z);
-    P.heat = G.run.heat || 0;
+    P.heat = Math.max(G.run.heat || 0, areaKey === 'hub' ? 0 : G.B.startHeat);
     G.camX = P.x; G.camZ = P.z - 2; G.inCombat = false; G.waves = null; G.waveIdx = 0; G.cleared = false; G.rewardT = -1; G.doorT = -1; G.waveHold = false; G.roomT = 0;
     return room;
   };
@@ -123,10 +134,13 @@
       { x: pr.M.x, z: pr.M.z, r: 2.0, label: '<b>E</b> Talk to Brine', fn: function () { G.talk('brine'); } }
     ];
     if (W.save.wins > 0) G.spots.push({ x: pr.b.x, z: pr.b.z + 1.2, r: 2.2, label: '<b>E</b> Bounty board', fn: G.openBounty });
+    // the other couriers wait by the lockers: talk to one to play as them
+    var others = D.CHAR_ORDER.filter(function (k) { return k !== G.run.char; }), lx = [room.cx(8), room.cx(4)], lz = [room.cz(4), room.cz(4)];
+    others.forEach(function (k, i) { var c = D.CHARS[k], n = npc(c.model, lx[i], lz[i], i ? 0.5 : -0.5, k); var wd = D.WEAPONS[c.weapon], w = M.makeWeapon(wd.model, wd.glow, n.rig.mats); w.position.set(0, -0.7, 0.04); n.rig.parts.armR.add(w); G.spots.push({ x: lx[i], z: lz[i] + 1.1, r: 1.9, label: '<b>E</b> ' + c.name + ', ' + c.role.toLowerCase(), fn: G.openChars }); });
     W.audio.setTrack('hub'); W.audio.target = 0.3;
     // greeting
     var s = W.save, L = D.LINES.ruen, lines;
-    if (G.lastEnd === 'win') lines = L.win; else if (G.lastEnd === 'boss2') lines = L.boss2; else if (G.newBoss1) { lines = L.boss1; G.newBoss1 = false; } else if (s.deaths === 0) lines = L.first; else lines = L.death[(s.deaths - 1) % L.death.length];
+    if (G.charPicked) { lines = D.LINES[G.charPicked].pick; G.charPicked = null; } else if (G.lastEnd === 'win') lines = L.win; else if (G.lastEnd === 'boss2') lines = L.boss2; else if (G.newBoss1) { lines = L.boss1; G.newBoss1 = false; } else if (s.deaths === 0) lines = L.first; else lines = L.death[(s.deaths - 1) % L.death.length];
     G.lastEnd = null;
     if (!P_.state || P_.state === 'hub') G.sayQueue('ruen', lines);
     if (G.botOn && P_.auto) G.autoSpend();
@@ -144,27 +158,51 @@
     var its = items();
     U.menu({ kicker: 'Mother Ruen · surgery', title: 'The board', portrait: 'ruen', who: 'Mother Ruen', line: 'You have ' + s.memory + ' Memory. Tell me where to cut.', items: its, close: 'Step away', onPick: function (i) { var it = its[i]; s.memory -= it.c; s.board[it.b.key]++; W.writeSave(); W.audio.sfx('install'); G.applyBoard(); G.openBoard(); return true; } });
   };
-  G.applyBoard = function () { var s = W.save, run = G.run; run.cellTier = s.board.cells; run.baseMaxHp = 100 + s.board.hp * 20; run.hp = run.baseMaxHp; run.maxHp = run.baseMaxHp; run.defy = s.board.defy ? 1 : 0; run.rerolls = s.board.reroll; run.offers = 2 + (s.board.doors ? 1 : 0); G.rebuild(); };
-  G.autoSpend = function () { var s = W.save, did = true; while (did) { did = false; D.BOARD.forEach(function (b) { var lv = s.board[b.key]; if (lv < b.costs.length && s.memory >= b.costs[lv]) { s.memory -= b.costs[lv]; s.board[b.key]++; did = true; } }); } G.applyBoard(); W.writeSave(); };
-  G.openRack = function () {
-    var s = W.save, u = s.unlocks, its = [];
-    ['baton', 'carbine', 'hammer'].forEach(function (k) {
-      var w = D.WEAPONS[k], have = k === 'baton' || u[k];
-      w.variants.forEach(function (v, vi) { var hv = have && (vi === 0 || u[v.key]); if (!hv && vi > 0 && !have) return; var cur = s.weapon === k && s.variant === vi; its.push({ tag: hv ? (cur ? 'In hand' : 'Take') : 'Locked', tagCol: cur ? '#ffb347' : null, title: vi === 0 ? w.name : v.name, text: vi === 0 ? w.text : v.text, cost: hv ? '' : D.UNLOCKS.filter(function (x) { return x.key === (vi === 0 ? k : v.key); })[0].cost + ' Core', k: k, vi: vi, have: hv, ukey: vi === 0 ? k : v.key }); });
-    });
-    if (u.pool < 4) its.push({ tag: 'Stock', title: 'Black-market stock', text: 'A new implant enters the pool. ' + u.pool + ' of 4 found.', cost: '1 Core', pool: true });
-    its.forEach(function (it) { if (!it.have && !it.pool) it.dis = s.cores < parseInt(it.cost, 10); if (it.pool) it.dis = s.cores < 1; });
-    U.menu({ kicker: 'Pike · the rack', title: 'Weapon frames', portrait: 'pike', who: 'Pike', line: 'You have ' + s.cores + ' Core' + (s.cores === 1 ? '' : 's') + '. Bosses carry them.', items: its, close: 'Step away', onPick: function (i) {
-      var it = its[i];
-      if (it.pool) { s.cores--; u.pool++; }
-      else if (!it.have) { s.cores -= parseInt(it.cost, 10); u[it.ukey] = true; }
-      else { s.weapon = it.k; s.variant = it.vi; var hp = G.run.hp; G.run.weapon = it.k; G.run.variantKey = it.vi ? it.k + it.vi : null; var P = G.player; Gf.scene.remove(P.rig.root); G.player = C.makePlayer(P.x, P.z); }
-      W.writeSave(); G.openRack(); return true;
+  G.openChars = function () {
+    var s = W.save, cur = G.run.char;
+    var its = D.CHAR_ORDER.map(function (k) { var c = D.CHARS[k]; return { tag: k === cur ? 'Playing' : c.role, tagCol: k === cur ? '#ffb347' : null, title: c.name, text: c.text + ' ' + c.moves.join('. ') + '. ' + c.hp + ' health.', k: k, dis: k === cur }; });
+    U.menu({ kicker: 'The lockers', title: 'Who carries the Package', portrait: 'ruen', who: 'Mother Ruen', line: 'I have rebuilt three of you. Pick who climbs tonight.', items: its, close: 'Step away', onPick: function (i) {
+      var k = its[i].k; s.char = k; s.weapon = D.CHARS[k].weapon; s.variant = 0; W.writeSave(); W.audio.sfx('install'); G.charPicked = k;
+      G.fade(function () { G.enterHub(false, true); });
     } });
+  };
+  G.applyBoard = function () { var s = W.save, run = G.run; run.cellTier = s.board.cells; run.baseMaxHp = C.char().hp + s.board.hp * 20 - (run.bounty.frail ? 30 : 0); run.hp = run.baseMaxHp; run.maxHp = run.baseMaxHp; run.defy = s.board.defy ? 1 : 0; run.rerolls = s.board.reroll; run.offers = 2 + (s.board.doors ? 1 : 0); G.rebuild(); };
+  G.autoSpend = function () { var s = W.save, did = true; while (did) { did = false; D.BOARD.forEach(function (b) { var lv = s.board[b.key]; if (lv < b.costs.length && s.memory >= b.costs[lv]) { s.memory -= b.costs[lv]; s.board[b.key]++; did = true; } }); } G.applyBoard(); W.writeSave(); };
+  // the rack lists weapon frames; a frame you own opens its builds
+  G.openRack = function (frame) {
+    var s = W.save, u = s.unlocks, its = [];
+    function cost(key) { return D.UNLOCKS.filter(function (x) { return x.key === key; })[0].cost; }
+    function equip(k, vi) { s.weapon = k; s.variant = vi; G.run.weapon = k; G.run.variantKey = vi ? k + vi : null; var P = G.player; Gf.scene.remove(P.rig.root); G.player = C.makePlayer(P.x, P.z); W.audio.sfx('install'); }
+    var line = 'You have ' + s.cores + ' Core' + (s.cores === 1 ? '' : 's') + '. Bosses carry them.';
+    if (typeof frame !== 'string') {
+      D.WEAPON_ORDER.filter(function (k) { var ch = D.WEAPONS[k].char; return !ch || ch === G.run.char; }).forEach(function (k) {
+        var w = D.WEAPONS[k], have = k === 'baton' || !!w.char || !!u[k], cur = s.weapon === k;
+        its.push({ tag: have ? (cur ? 'In hand' : (w.variants.length > 1 ? w.variants.length + ' builds' : 'Take')) : 'Locked', tagCol: cur ? '#ffb347' : null, title: w.name, text: w.text + (cur && s.variant ? ' Fitted: ' + w.variants[s.variant].name + '.' : ''), cost: have ? '' : cost(k) + ' Core', dis: !have && s.cores < cost(k), k: k, have: have });
+      });
+      if (u.pool < 4) its.push({ tag: 'Stock', title: 'Black-market stock', text: 'A new implant enters the pool. ' + u.pool + ' of 4 found.', cost: '1 Core', pool: true, dis: s.cores < 1 });
+      U.menu({ kicker: 'Pike · the rack', title: 'Weapon frames', portrait: 'pike', who: 'Pike', line: line, items: its, close: 'Step away', onPick: function (i) {
+        var it = its[i];
+        if (it.pool) { s.cores--; u.pool++; W.audio.sfx('buy'); }
+        else if (!it.have) { s.cores -= cost(it.k); u[it.k] = true; W.audio.sfx('buy'); }
+        else if (D.WEAPONS[it.k].variants.length > 1) { W.writeSave(); G.openRack(it.k); return true; }
+        else equip(it.k, 0);
+        W.writeSave(); G.openRack(); return true;
+      } });
+    } else {
+      var w = D.WEAPONS[frame];
+      w.variants.forEach(function (v, vi) { var hv = vi === 0 || !!u[v.key], cur = s.weapon === frame && s.variant === vi; its.push({ tag: hv ? (cur ? 'In hand' : 'Take') : 'Locked', tagCol: cur ? '#ffb347' : null, title: vi === 0 ? w.name : v.name, text: vi === 0 ? w.text : v.text, cost: hv ? '' : cost(v.key) + ' Core', dis: !hv && s.cores < cost(v.key), vi: vi, hv: hv, key: v.key }); });
+      its.push({ tag: 'Rack', title: 'Other frames', text: 'Back to the full rack.', back: true });
+      U.menu({ kicker: 'Pike · the rack', title: w.name, portrait: 'pike', who: 'Pike', line: line, items: its, close: 'Step away', onPick: function (i) {
+        var it = its[i];
+        if (it.back) { G.openRack(); return true; }
+        if (!it.hv) { s.cores -= cost(it.key); u[it.key] = true; W.audio.sfx('buy'); } else equip(frame, it.vi);
+        W.writeSave(); G.openRack(frame); return true;
+      } });
+    }
   };
   G.openBounty = function () {
     var s = W.save, its = D.BOUNTY.map(function (b) { return { tag: s.bounty[b.key] ? 'Active' : 'Off', tagCol: s.bounty[b.key] ? '#ff4a26' : null, title: b.name, text: b.text, b: b }; });
-    U.menu({ kicker: 'Bounty board', title: 'Raise the price on your head', line: 'Chosen modifiers make the next climb harder and pay more.', items: its, close: 'Step away', onPick: function (i) { s.bounty[its[i].b.key] = !s.bounty[its[i].b.key]; W.writeSave(); G.run.bounty = s.bounty; G.bossSpeed = s.bounty.fast ? 1.25 : 1; G.memMul = 1 + (s.bounty.elites ? 0.3 : 0) + (s.bounty.heal ? 0.3 : 0); G.openBounty(); return true; } });
+    U.menu({ kicker: 'Bounty board', title: 'Raise the price on your head', line: 'Chosen modifiers make the next climb harder and pay more.', items: its, close: 'Step away', onPick: function (i) { s.bounty[its[i].b.key] = !s.bounty[its[i].b.key]; W.writeSave(); G.run.bounty = s.bounty; G.setBounty(); G.applyBoard(); G.openBounty(); return true; } });
   };
 
   // ---- run rooms ----
@@ -184,11 +222,15 @@
     W.audio.setTrack(kind === 'boss' ? (run.area === 'sumps' ? 'boss1' : 'boss2') : run.area);
     if (kind === 'fight' || kind === 'elite') {
       var w = WAVES[run.area][Math.min(run.fightIdx, WAVES[run.area].length - 1)]; if (kind === 'elite') w = WAVES.sumps[4];
-      G.waves = JSON.parse(JSON.stringify(w)); run.fightIdx += kind === 'fight' ? 1 : 0;
+      G.risk = !!(reward && reward.kind === 'risk'); if (G.risk) { w = RISK[run.area]; G.hpScale *= 1.1; }
+      G.waves = JSON.parse(JSON.stringify(w)).map(expandWave); run.fightIdx += kind === 'fight' ? 1 : 0;
+      if (run.bounty.crowd && !(run.area === 'sumps' && run.roomIdx === 0)) G.waves.forEach(function (wv) { wv.push(run.rng.pick(run.area === 'sumps' ? ['scav', 'hound', 'leech'] : ['scav', 'hound', 'hopper'])); });
+      if (G.B.eliteMore && !(run.area === 'sumps' && run.roomIdx === 0)) { var lw = G.waves[G.waves.length - 1]; lw[0] = 'E:' + lw[0].replace('E:', ''); }
       if (run.bounty.elites && kind === 'fight' && !(run.area === 'sumps' && run.roomIdx === 0)) G.waves[G.waves.length - 1][0] = 'E:' + G.waves[G.waves.length - 1][0].replace('E:', '');
       // seeded variation: one extra from the area pool after the first rooms
-      if (run.roomIdx > 1 && kind === 'fight') { var pool = run.area === 'sumps' ? ['leech', 'hound', 'scav'] : ['leech', 'hound', 'scav', 'ghost']; G.waves[G.waves.length - 1].push(run.rng.pick(pool)); if (run.areaIdx === 1) G.waves[0].push(run.rng.pick(['leech', 'scav'])); }
-      G.waveIdx = 0; G.waveT = 0.9; G.inCombat = true; var rk = reward && reward.kind; G.waveHold = rk === 'implant' || rk === 'chop' || rk === 'gear' || rk === 'scrip' || rk === 'health' || rk === 'memory'; if (G.waveHold) G.rewardT = 0.7; G.tutorial = run.area === 'sumps' && run.roomIdx === 0;
+      if (run.roomIdx > 1 && kind === 'fight') { var pool = run.area === 'sumps' ? ['leech', 'hound', 'scav', 'rat', 'bomber'] : ['leech', 'hound', 'scav', 'ghost', 'hopper']; G.waves[G.waves.length - 1].push(run.rng.pick(pool)); if (run.areaIdx === 1) G.waves[0].push(run.rng.pick(['leech', 'scav'])); }
+      G.waveIdx = 0; G.waveT = 0.9; G.inCombat = true; var rk = reward && reward.kind; G.waveHold = rk === 'implant' || rk === 'chop' || rk === 'gear' || rk === 'scrip' || rk === 'health' || rk === 'memory' || rk === 'shrine';
+      if (G.risk) U.banner('Hunting ground', 'Elites hold this room. The spoils are yours if you clear it.', 2.4); if (G.waveHold) G.rewardT = 0.7; G.tutorial = run.area === 'sumps' && run.roomIdx === 0;
       if (G.tutorial) U.toast('Three pipe scavs. Left click to hit. Knock them into the water.', 7);
     } else if (kind === 'shop') {
       var pr = room.props.H; G.npcHask = npc('hask', pr.x, pr.z - 0.2, 0, 'hask'); G.shopStock = null;
@@ -210,7 +252,7 @@
     var P = G.player, room = G.room;
     list.forEach(function (t, i) {
       var elite = t.indexOf('E:') === 0; if (elite) t = t.slice(2);
-      var sp = Wd.freeSpot(room, G.rng, P.x, P.z, t === 'spitter' || t === 'rigger' ? 9 : 5.5, G.tutorial ? 9 : 15);
+      var sp = Wd.freeSpot(room, G.rng, P.x, P.z, t === 'spitter' || t === 'rigger' || t === 'sniper' || t === 'netter' || t === 'shepherd' ? 9 : 5.5, G.tutorial ? 9 : 15);
       var e = E.spawn(t, sp.x, sp.z, { elite: elite, slow: G.tutorial, hp: G.tutorial ? 22 : 0 });
       e.spawnT += i * 0.12; if (G.tutorial) { e.speed = 2.4; e.cd = 2; }
     });
@@ -226,7 +268,9 @@
       var fk = run.rng.shuffle(Pt.FKEYS.slice());
       if (run.area === 'sumps' && run.roomIdx === 0) { for (var i = 0; i < n; i++) rewards.push(impReward(fk[i])); }
       else {
-        var kinds = run.rng.shuffle(['implant', 'implant', 'implant', 'chop', 'gear', 'scrip', 'health', 'memory']).slice(0, n); if (kinds.indexOf('implant') < 0) kinds[0] = 'implant';
+        var kinds = run.rng.shuffle(['implant', 'implant', 'implant', 'chop', 'gear', 'scrip', 'health', 'memory', 'shrine', 'risk']).slice(0, n); if (kinds.indexOf('implant') < 0) kinds[0] = 'implant';
+        if (nextKind === 'elite' || run.boons.length >= 3) kinds = kinds.map(function (k) { return k === 'risk' || (k === 'shrine' && run.boons.length >= 3) ? 'scrip' : k; });
+        if (P_.door) kinds[kinds.length - 1] = P_.door;
         if (run.wtier >= 3) kinds = kinds.map(function (k) { return k === 'chop' ? 'scrip' : k; });
         kinds.forEach(function (k, j) {
           if (k === 'implant') rewards.push(impReward(fk[j % 4]));
@@ -234,6 +278,8 @@
           else if (k === 'gear') rewards.push({ kind: 'gear', label: 'Gear', sub: 'A rig or a deck' });
           else if (k === 'scrip') rewards.push({ kind: 'scrip', label: 'Scrip', sub: '35 to spend', col: '#ffd070' });
           else if (k === 'health') rewards.push({ kind: 'health', label: 'Patch kit', sub: 'Mend 35 health', col: '#ff6a4a' });
+          else if (k === 'shrine') rewards.push({ kind: 'shrine', label: 'Drowned shrine', sub: 'A pact: a gift and its price', col: '#c8b8ff' });
+          else if (k === 'risk') rewards.push({ kind: 'risk', label: 'Hunting ground', sub: 'Elites · implant, 40 scrip, 10 Memory', col: '#ff4a26' });
           else rewards.push({ kind: 'memory', label: 'Memory', sub: '12 for the board', col: '#9fe8e0' });
         });
       }
@@ -291,6 +337,10 @@
       U.menu({ kicker: 'Gear cache', title: 'Take one', line: 'A rig changes your dash. A deck changes your tag drone.', items: gs.map(function (k) { var g = D.GEAR[k]; return { tag: g.slot === 'rig' ? 'Rig · dash' : 'Deck · tag drone', title: g.name, text: g.text }; }), onPick: function (i) { var g = D.GEAR[gs[i]]; run[g.slot] = gs[i]; G.rebuild(); G.player.dashes = G.player.maxDashes; W.audio.sfx('install'); done(); } });
     } else if (r.kind === 'scrip') { run.scrip += 35; F.text(G.player.x, 2.8, G.player.z, '+35 scrip', 'scrip', 1.2); W.audio.sfx('buy'); done(); }
     else if (r.kind === 'health') { G.heal(35); done(); }
+    else if (r.kind === 'shrine') {
+      var bs = run.rng.shuffle(Object.keys(D.BOONS).filter(function (k) { return run.boons.indexOf(k) < 0; })).slice(0, 3);
+      U.menu({ kicker: 'Drowned shrine', title: 'Make a pact', line: D.LINES.shrine[0] + ' ' + D.LINES.shrine[1], items: bs.map(function (k) { var bn = D.BOONS[k]; return { tag: 'Pact', tagCol: '#c8b8ff', title: bn.name, text: bn.text, heat: 'Price: ' + bn.price, boon: bn }; }), close: 'Leave it be', onClose: done, onPick: function (i) { run.boons.push(bs[i]); G.rebuild(); G.player.dashes = G.player.maxDashes; W.audio.sfx('install'); F.text(G.player.x, 3.0, G.player.z, D.BOONS[bs[i]].name, 'call fusion', 1.3); done(); } });
+    }
     else if (r.kind === 'memory') { G.gainMemory(12 / (G.memMul || 1) * (G.memMul || 1)); F.text(G.player.x, 2.8, G.player.z, '+12 Memory', 'heal', 1.2); W.audio.sfx('buy'); done(); }
     else done();
   };
@@ -332,7 +382,7 @@
     G.enemies.forEach(function (o) { if (o !== e && !o.dead) { o.summon = true; C.kill(o, {}); } });
     Gf.uni.uSurge.value = 0; G.surgeInfo = null; G.slowmo = 1.6; F.addShake(0.7); W.audio.sfx('boom'); W.audio.sfx('win'); W.audio.target = 0;
     F.steamBurst(e.x, e.z, 18, 8); for (var i = 0; i < 12; i++) { var a = Math.random() * 6.28; F.spawn(K.SPARK, { x: e.x + Math.cos(a) * 2, y: 1 + Math.random() * 2, z: e.z + Math.sin(a) * 2, s: 2 + Math.random() * 2, bill: true, col: i % 2 ? 0xffb347 : 0xffffff, dur: 0.4, delay: i * 0.08 }); }
-    var cores = 1 + (run.bounty.fast ? 1 : 0); s.cores += cores; G.inCombat = false; G.cleared = true;
+    var cores = 1 + (run.bounty.fast ? 1 : 0) + (run.bounty.frail && e.type !== 'dredge' ? 1 : 0); s.cores += cores; G.inCombat = false; G.cleared = true;
     if (e.type === 'dredge') { if (!s.boss1) G.newBoss1 = true; s.boss1++; U.banner('The Dredge is scrap', '+' + cores + ' Core', 3); }
     else { s.boss2++; U.banner('Marrow is down', '+' + cores + ' Core', 3); run.implants.forEach(function (it) { it.torn = false; }); G.rebuild(); }
     W.writeSave(); G.bossRewardT = 2.4; G.bossDeadType = e.type; G.bossFaction = e.faction;
@@ -369,7 +419,7 @@
   };
   function endCard() {
     var run = G.run, st = run.stats, mm = Math.floor(st.time / 60), ss = Math.floor(st.time % 60);
-    var rows = [['Time', mm + ':' + (ss < 10 ? '0' : '') + ss], ['Kills', st.kills], ['Rooms', st.rooms], ['Damage taken', st.dmgTaken], ['Vents', st.vents], ['Redlines', st.redlines], ['Fusions fired', st.fusions], ['Implants', run.implants.length], ['Memory carried out', st.memory]];
+    var rows = [['Courier', C.char().name], ['Weapon', D.WEAPONS[run.weapon].name], ['Pacts', run.boons.length ? run.boons.map(function (k) { return D.BOONS[k].name.replace(' pact', ''); }).join(', ') : 'None'], ['Time', mm + ':' + (ss < 10 ? '0' : '') + ss], ['Kills', st.kills], ['Rooms', st.rooms], ['Damage taken', st.dmgTaken], ['Vents', st.vents], ['Redlines', st.redlines], ['Fusions fired', st.fusions], ['Implants', run.implants.length], ['Memory carried out', st.memory]];
     U.menu({ kicker: 'End of the slice', title: 'The Package goes higher', portrait: 'buyer', who: 'The buyer', line: D.LINES.buyer[2] + ' Next: the Spire, above the roof. Not built yet.', html: '<div id="endcard"><table>' + rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table></div>', items: [{ tag: 'Mother Ruen is waiting', title: 'Back to the clinic', text: 'A bounty board is now open in the hub. Raise the difficulty for more reward.' }], onPick: function () { G.fade(function () { G.enterHub(false, true); }); } });
   }
 
@@ -446,7 +496,7 @@
       W.audio.target = G.cleared ? 0 : W.clamp(0.35 + alive * 0.13, 0.35, 1);
     } else if (G.boss && !G.boss.dead) W.audio.target = 0.75 + G.boss.phase * 0.08;
     if (G.rewardT > 0) { G.rewardT -= dt; if (G.rewardT <= 0) { G.rewardT = -1; G.giveReward(run.nextReward, function () { G.waveHold = false; }); } }
-    if (G.doorT > 0) { G.doorT -= dt; if (G.doorT <= 0) openDoors(); }
+    if (G.doorT > 0) { G.doorT -= dt; if (G.doorT <= 0) { if (G.risk) { G.risk = false; run.scrip += 40; G.gainMemory(10); F.text(P.x, 2.8, P.z, '+40 scrip', 'scrip', 1.2); W.audio.sfx('buy'); G.offerImplants(null, openDoors, { list: Pt.FKEYS.map(function (f) { return G.poolFor(f, 1)[0]; }).filter(Boolean).slice(0, 3), kicker: 'Hunting ground', title: 'Spoils', portrait: 'pike', who: 'Pike, on comms', line: 'They were carrying. Strip one and move.' }); } else openDoors(); } }
     if (G.bossRewardT > 0) { G.bossRewardT -= dt; if (G.bossRewardT <= 0) bossReward(); }
     if (G.eventT > 0) { G.eventT -= dt; if (G.eventT <= 0) G.openEvent(); }
     if (G.deathT > 0) { G.deathT -= dt; if (G.deathT <= 0) afterDeath(); }

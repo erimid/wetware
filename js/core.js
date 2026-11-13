@@ -14,6 +14,9 @@ var W = window.W = {};
     bot: q.get('bot'),          // 'dodge' = dodge-only test player
     phase: q.has('phase') ? parseInt(q.get('phase'), 10) : null,
     weapon: q.get('weapon'),
+    variant: q.has('variant') ? parseInt(q.get('variant'), 10) : 0,
+    char: q.get('char'),        // kestrel | vesper | bram
+    door: q.get('door'),        // force a door reward kind: shrine | risk | gear ...
     fps: q.get('fps') === '1',
     noattract: q.get('noattract') === '1',
     room: q.has('room') ? parseInt(q.get('room'), 10) : null,
@@ -60,9 +63,9 @@ var W = window.W = {};
     return {
       v: 1, memory: 0, cores: 0, runs: 0, deaths: 0, wins: 0, boss1: 0, boss2: 0, bestRoom: 0,
       board: { cells: 0, hp: 0, dash: 0, defy: 0, doors: 0, reroll: 0 },
-      unlocks: { carbine: false, hammer: false, baton1: false, baton2: false, carbine1: false, carbine2: false, hammer1: false, hammer2: false, pool: 0 },
-      weapon: 'baton', variant: 0,
-      bounty: { elites: false, fast: false, heal: false },
+      unlocks: { carbine: false, hammer: false, baton1: false, baton2: false, carbine1: false, carbine2: false, hammer1: false, hammer2: false, whip: false, blades: false, spear: false, rivet: false, whip1: false, whip2: false, blades1: false, blades2: false, spear1: false, spear2: false, rivet1: false, rivet2: false, pool: 0 },
+      weapon: 'baton', variant: 0, char: 'kestrel',
+      bounty: { elites: false, fast: false, heal: false, crowd: false, frail: false, fever: false },
       talk: {}, lastChoice: null, snubbed: {}
     };
   }
@@ -75,7 +78,7 @@ var W = window.W = {};
     } else if (name === 'full') {
       s.memory = 400; s.cores = 6; s.runs = 21; s.deaths = 17; s.wins = 4; s.boss1 = 9; s.boss2 = 4; s.bestRoom = 14;
       s.board = { cells: 4, hp: 3, dash: 1, defy: 1, doors: 1, reroll: 2 };
-      var u = s.unlocks; u.carbine = u.hammer = u.baton1 = u.baton2 = u.carbine1 = u.carbine2 = u.hammer1 = u.hammer2 = true; u.pool = 4;
+      var u = s.unlocks; for (var uk in u) u[uk] = true; u.pool = 4;
     }
     return s;
   }
