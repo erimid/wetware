@@ -1,7 +1,7 @@
 // Wetware — main: boot, run flow, rooms, doors, rewards, hub, meta, end, camera, debug params
 'use strict';
 (function () {
-  var G = W.game = { state: 'boot', time: 0, enemies: [], shots: [], tells: [], zones: [], npcs: [], hinted: {}, hitstop: 0, slowmo: 0, room: null, player: null, run: null, B: null, boss: null, inCombat: false, cinematic: 0, fadeK: 0, fadeDir: 0, camX: 0, camZ: 0, camD: 38, whereText: '' };
+  var G = W.game = { state: 'boot', time: 0, enemies: [], shots: [], tells: [], zones: [], npcs: [], hinted: {}, hitstop: 0, slowmo: 0, room: null, player: null, run: null, B: null, boss: null, inCombat: false, cinematic: 0, fadeK: 0, fadeDir: 0, camX: 0, camZ: 0, camD: 45.6, whereText: '' };
   var C = W.combat, E = W.enemies, Bs = W.boss, Wd = W.world, F = W.fx, K = F.K, M = W.models, D = W.data, U = W.ui, Pt = W.paint, Gf = W.gfx, P_ = W.params;
   var PITCH = 50 * Math.PI / 180;
 
@@ -491,14 +491,14 @@
   G.draw = function (dtMs) {
     var P = G.player, room = G.room, dt = Math.min(0.05, dtMs / 1000);
     if (P && room) {
-      var tx = P.x, tz = P.z - 1.2, D0 = 38; if (G.state === 'end') { tz -= 3.5; D0 = 42; }
+      var ZOOM = 1.2, tx = P.x, tz = P.z - 1.2, D0 = 38 * ZOOM; if (G.state === 'end') { tz -= 3.5; D0 = 42 * ZOOM; }
       if (G.cinematic > 0) { tx = G.cineX; tz = G.cineZ; }
       else if (W.input.everMoved && !U.modal && !G.frozen) { var gp = Gf.groundPoint(W.input.mouseX, W.input.mouseY); tx += W.clamp((gp.x - P.x) * 0.12, -2, 2); tz += W.clamp((gp.z - P.z) * 0.12, -1.5, 1.5); }
       if (G.cleared && G.state === 'run' && !G.boss) tz -= 2.6;
-      if (G.boss && !G.boss.dead && G.boss.type === 'dredge') { tx = W.lerp(tx, G.boss.x, 0.35); tz = W.lerp(tz, G.boss.z, 0.35); D0 = 40; }
+      if (G.boss && !G.boss.dead && G.boss.type === 'dredge') { tx = W.lerp(tx, G.boss.x, 0.35); tz = W.lerp(tz, G.boss.z, 0.35); D0 = 40 * ZOOM; }
       var v = P_.view;
-      if (v === 'wide') { D0 = 46; tx = W.lerp(tx, 0, 0.7); tz = W.lerp(tz, -1, 0.7); } else if (v === 'kestrel') { D0 = 13; tx = P.x; tz = P.z; } else if (v === 'boss1' || v === 'boss2') { if (G.boss) { tx = W.lerp(P.x, G.boss.x, 0.5); tz = W.lerp(P.z, G.boss.z, 0.5) - 1; D0 = v === 'boss1' ? 44 : 30; } }
-      var hw = Math.max(0, room.halfW - 10), hh = Math.max(0, room.halfH - 6.5);
+      if (v === 'wide') { D0 = 46 * ZOOM; tx = W.lerp(tx, 0, 0.7); tz = W.lerp(tz, -1, 0.7); } else if (v === 'kestrel') { D0 = 13; tx = P.x; tz = P.z; } else if (v === 'boss1' || v === 'boss2') { if (G.boss) { tx = W.lerp(P.x, G.boss.x, 0.5); tz = W.lerp(P.z, G.boss.z, 0.5) - 1; D0 = (v === 'boss1' ? 44 : 30) * ZOOM; } }
+      var hw = Math.max(0, room.halfW - 12), hh = Math.max(0, room.halfH - 8);
       if (v !== 'kestrel') { tx = W.clamp(tx, -hw, hw); tz = W.clamp(tz, -hh - 3, hh - 1); }
       var k = G.frozen || G.camSnap ? 1 : 1 - Math.exp(-5 * dt);
       G.camX += (tx - G.camX) * k; G.camZ += (tz - G.camZ) * k; G.camD += (D0 - G.camD) * k;

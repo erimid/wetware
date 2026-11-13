@@ -159,8 +159,20 @@
     // legs
     ['legL', 'legR'].forEach(function (n, i) {
       var sx = i ? 1 : -1; b = new Bld();
+      if (o.detail) {
+        var gd = c.guard || 0x59636a, gd2 = c.guard2 || 0x8a949a;
+        b.add(lathe([[0, 0.04], [0.15 * k, 0], [0.168 * k, -0.18], [0.135 * k, -0.4], [0.118 * k, -0.47], [0.138 * k, -0.57], [0.11 * k, -0.8], [0.12 * k, -0.86], [0, -0.9]], 14), {}, c.leg, 0, { grad: c.leg2 || c.leg });
+        b.add(rbox(0.21 * k, 0.2, 0.13, 0.05), { p: [0, -0.45, 0.1 * k] }, gd, 1, { grad: gd2 });
+        b.add(rbox(0.17 * k, 0.26, 0.1, 0.04), { p: [0, -0.69, 0.095 * k] }, gd, 1, { grad: gd2 });
+        b.add(lathe([[0.125 * k, -0.7], [0.155 * k, -0.74], [0.125 * k, -0.79]], 12), {}, c.boot2 || 0x2c3238, 0);
+        b.add(rbox(0.24 * k, 0.19, 0.44, 0.08), { p: [0, -0.84, 0.08] }, c.boot, 3);
+        b.add(rbox(0.26 * k, 0.065, 0.48, 0.03), { p: [0, -0.925, 0.08] }, c.sole || 0x6a7074, 1);
+        b.add(rbox(0.25 * k, 0.07, 0.1, 0.03), { p: [0, -0.82, 0.2] }, c.cuff || gd2, 1);
+        if (i === 1 && c.holster) b.add(rbox(0.12, 0.3, 0.2, 0.04), { p: [0.15 * k, -0.2, 0.0] }, c.holster, 0);
+      } else {
       b.add(lathe([[0, 0.04], [0.14 * k, 0], [0.15 * k, -0.3], [0.1 * k, -0.62], [0.11 * k, -0.86], [0, -0.9]], 12), {}, c.leg, 0, { grad: c.leg2 || c.leg });
       b.add(rbox(0.22 * k, 0.17, 0.4, 0.07), { p: [0, -0.87, 0.07] }, c.boot, 3);
+      }
       t.part(n, null, b, [sx * 0.14 * k, 0.95, 0]);
     });
     t.part('body', null, null, [0, 0.95, 0]);
@@ -173,6 +185,15 @@
     if (o.pack === 'tank') { b.add(cap(0.14, 0.4), { p: [-0.1, 0.36, -0.28] }, c.packCol || 0x8a6a2a, 1); b.add(cap(0.14, 0.4), { p: [0.14, 0.36, -0.28] }, c.packCol || 0x8a6a2a, 1); }
     if (o.pack === 'antenna') { b.add(rbox(0.5, 0.6, 0.3, 0.06), { p: [0, 0.36, -0.3] }, c.packCol || 0x4a5258, 1); b.add(cyl(0.015, 1.3, 5), { p: [0.18, 1.2, -0.34] }, 0x14161a, 1); b.add(sph(0.05, 8, 6), { p: [0.18, 1.86, -0.34] }, c.eye, 2, { emis: 1 }); b.add(cyl(0.015, 0.8, 5), { p: [-0.16, 0.95, -0.34], r: [0, 0, 0.2] }, 0x14161a, 1); }
     if (o.pack === 'frame') { b.add(rbox(0.9 * k, 0.7, 0.4, 0.08), { p: [0, 0.46, -0.3] }, c.pad, 1, { grad: c.coat2 }); b.add(cyl(0.09, 0.6, 8), { p: [-0.3 * k, 0.95, -0.36] }, 0x2a2e34, 1); b.add(cyl(0.09, 0.6, 8), { p: [0.3 * k, 0.95, -0.36] }, 0x2a2e34, 1); }
+    if (o.detail) {
+      b.add(cyl(0.1, 0.16, 10), { p: [0, 0.77, 0] }, c.neck || 0x14181c, 0);
+      b.add(lathe([[0.2 * k, 0.6], [0.275 * k, 0.69], [0.23 * k, 0.8], [0.17 * k, 0.8]], 16), { s: [1, 1, 0.9] }, c.collar || c.coat2, 3);
+      b.add(tube([[-0.25 * k, 0.62, 0.1], [-0.08 * k, 0.42, 0.21 * k], [0.14 * k, 0.2, 0.2 * k], [0.24 * k, 0.08, 0.08]], 0.05, 12, 6), {}, c.strap || c.belt || 0x8a5a2a, 0);
+      b.add(rbox(0.15, 0.17, 0.1, 0.035), { p: [-0.11 * k, 0.26, 0.19 * k], r: [0, 0, 0.5] }, c.pouch || 0x6a4a26, 0);
+      b.add(rbox(0.17, 0.22, 0.13, 0.04), { p: [0.26 * k, -0.02, 0.04] }, c.pouch || 0x6a4a26, 0);
+      b.add(rbox(0.15, 0.19, 0.13, 0.04), { p: [-0.26 * k, -0.01, -0.02] }, c.pouch2 || 0x39444c, 1);
+      b.add(rbox(0.1, 0.05, 0.03, 0.012), { p: [0.26 * k, 0.03, 0.11] }, c.belt2 || 0xd9a520, 1);
+    }
     if (o.core) b.add(sph(0.11, 10, 8), { p: [0, 0.4, 0.2 * k] }, c.eye, 2, { emis: 1 });
     t.part('torso', 'body', b, [0, 0, 0]);
     // head
@@ -181,11 +202,25 @@
       b.add(sph(0.25, 16, 12), { p: [0, 0.04, -0.1], s: [1.04, 1.08, 1.0] }, c.hood, 3, { grad: c.hood2 || c.hood });
       b.add(cone(0.14, 0.28, 10), { p: [0, 0.1, -0.2], r: [-1.9, 0, 0] }, c.hood, 3);
       b.add(sph(0.185, 14, 10), { p: [0, 0, 0.07] }, 0x14181c, 0);
+      if (o.detail) {
+        b.add(tor(0.245, 0.04, Math.PI), { p: [0, 0.0, 0.1], s: [1, 1.12, 1] }, c.hood2 || c.hood, 3);
+        b.add(lathe([[0.19, -0.02], [0.215, 0.045], [0.19, 0.11]], 16), { p: [0, 0, 0.05] }, c.band || 0x8a5a2a, 0);
+        [-1, 1].forEach(function (sx) {
+          b.add(cyl(0.105, 0.09, 12), { p: [sx * 0.1, 0.045, 0.235], r: [Math.PI / 2, 0, 0] }, 0x22262c, 1);
+          b.add(cyl(0.078, 0.05, 12), { p: [sx * 0.1, 0.045, 0.275], r: [Math.PI / 2, 0, 0] }, c.eye, 2, { emis: 1 });
+          b.add(sph(0.028, 6, 5), { p: [sx * 0.1 - 0.03, 0.075, 0.3] }, 0xfff4d8, 2, { emis: 1 });
+          b.add(cyl(0.078, 0.13, 10), { p: [sx * 0.155, -0.135, 0.18], r: [Math.PI / 2, 0, sx * -0.5] }, 0x59636a, 1, { grad: 0x8a949a });
+        });
+        b.add(rbox(0.22, 0.17, 0.18, 0.06), { p: [0, -0.11, 0.22] }, 0x39444c, 1);
+        b.add(cyl(0.065, 0.08, 10), { p: [0, -0.12, 0.32], r: [Math.PI / 2, 0, 0] }, c.cuff || 0xd9a520, 1);
+        b.add(tube([[0.1, -0.18, 0.18], [0.2, -0.24, 0.06], [0.2, -0.3, -0.08]], 0.042, 10, 6), {}, 0x22262c, 0);
+      } else {
       b.add(rbox(0.38, 0.12, 0.1, 0.03), { p: [0, 0.04, 0.22] }, 0x1c2026, 1);
       b.add(sph(0.085, 10, 8), { p: [-0.095, 0.045, 0.265], s: [1, 1, 0.6] }, c.eye, 2, { emis: 1 });
       b.add(sph(0.085, 10, 8), { p: [0.095, 0.045, 0.265], s: [1, 1, 0.6] }, c.eye, 2, { emis: 1 });
       b.add(rbox(0.2, 0.15, 0.16, 0.05), { p: [0, -0.1, 0.22] }, 0x39444c, 1);
       b.add(cyl(0.06, 0.1, 8), { p: [-0.13, -0.12, 0.17], r: [0, 0, 1.2] }, 0x59636a, 1); b.add(cyl(0.06, 0.1, 8), { p: [0.13, -0.12, 0.17], r: [0, 0, -1.2] }, 0x59636a, 1);
+      }
     } else if (o.head === 'dive') {
       b.add(sph(0.3, 16, 12), { p: [0, 0.06, 0] }, c.helm, 1, { grad: c.helm2 || c.helm });
       b.add(cyl(0.15, 0.08, 14), { p: [0, 0.06, 0.27], r: [Math.PI / 2, 0, 0] }, 0x2a2018, 1);
@@ -222,6 +257,13 @@
     ['armL', 'armR'].forEach(function (n, i) {
       var sx = i ? 1 : -1, as = o.arm || 1; b = new Bld();
       b.add(lathe([[0, 0.1], [0.12 * k * as, 0.06], [0.125 * k * as, -0.2], [0.09 * k * as, -0.5], [0.1 * k * as, -0.62], [0, -0.64]], 12), {}, c.sleeve || c.coat, 0, { grad: c.coat2 || c.coat });
+      if (o.detail) {
+        var hk2 = o.hand || 1;
+        b.add(rbox(0.2 * hk2, 0.22 * hk2, 0.23 * hk2, 0.07), { p: [0, -0.72, 0.02] }, c.glove, 0);
+        b.add(cap(0.05 * hk2, 0.07), { p: [-sx * 0.11 * hk2, -0.7, 0.07], r: [0.5, 0, sx * 0.5] }, c.glove, 0);
+        b.add(sph(0.15 * k * as, 10, 8), { p: [sx * 0.02, 0.04, 0], s: [1, 0.8, 1] }, c.shoulder || c.coat2 || c.coat, 0);
+        if (i === (o.bracerArm === undefined ? 0 : o.bracerArm) || o.bracerArm === 2) { b.add(rbox(0.23 * k, 0.26, 0.23 * k, 0.06), { p: [0, -0.4, 0] }, c.guard || 0x59636a, 1, { grad: c.guard2 || 0x8a949a }); b.add(rbox(0.08, 0.1, 0.04, 0.015), { p: [sx * 0.0, -0.4, 0.12 * k] }, c.eye, 2, { emis: 0.8 }); }
+      } else
       b.add(sph(0.155 * (o.hand || 1), 12, 10), { p: [0, -0.7, 0.02], s: [1, 1.15, 1.05] }, c.glove, 0);
       if (o.cuff) b.add(lathe([[0.11 * k, -0.5], [0.15 * k, -0.56], [0.11 * k, -0.62]], 12), {}, o.cuff, 1);
       if (o.fist) { b.add(rbox(0.5, 0.7, 0.5, 0.12), { p: [0, -0.86, 0] }, c.pad, 1, { grad: c.coat2 }); b.add(rbox(0.54, 0.12, 0.54, 0.04), { p: [0, -0.62, 0] }, 0xd9a520, 0); }
@@ -234,15 +276,18 @@
     if (o.cape) {
       b = new Bld(); var cl = o.cape.len || 1.15, cw = o.cape.w || 0.66;
       var pts = [[0.2, 0.1], [0.34 * k, 0.0], [0.4 * k, -0.25], [cw * 0.8, -cl * 0.6], [cw, -cl], [cw * 1.04, -cl - 0.06]];
-      var g = lathe(pts, 22, Math.PI * 0.5 + 0.55, Math.PI * 2 - 1.1);
+      var cg = o.cape.gap || 1.1, mg = o.cape.mgap || 0.7;
+      var c0 = o.cape.front ? 0 : Math.PI * 0.5; var g = lathe(pts, 22, c0 + cg / 2, Math.PI * 2 - cg);
       var pa = g.attributes.position; for (var i = 0; i < pa.count; i++) { var y = pa.getY(i), w = W.sat(-y / cl); var a = Math.atan2(pa.getZ(i), pa.getX(i)); var rr = 1 + Math.sin(a * 5 + 1) * 0.07 * w + Math.sin(a * 9) * 0.03 * w; var back = Math.max(0, -Math.sin(a)); pa.setX(i, pa.getX(i) * rr * (1 - 0.12 * w)); pa.setZ(i, pa.getZ(i) * rr * (1 + 0.5 * back * w) - 0.14 * w); pa.setY(i, y - Math.sin(a * 3) * 0.05 * w - back * back * 0.22 * w); }
       g.computeVertexNormals();
       b.add(g, {}, o.cape.col, 3, { grad: o.cape.col2 || o.cape.col });
       if (o.cape.mantle) {
-        var gm = lathe([[0.16, 0.16], [0.36 * k, 0.06], [0.52 * k, -0.2], [0.56 * k, -0.3]], 18, Math.PI * 0.5 + 0.35, Math.PI * 2 - 0.7); b.add(gm, {}, o.cape.mantle, 3, { grad: o.cape.mantle2 || o.cape.mantle });
+        var ms = o.cape.msize || 1;
+        var gm = lathe([[0.16, 0.16], [0.36 * k, 0.06], [(0.36 + 0.16 * ms) * k, 0.06 - 0.26 * ms], [(0.36 + 0.2 * ms) * k, 0.06 - 0.36 * ms]], 18, c0 + mg / 2, Math.PI * 2 - mg); b.add(gm, {}, o.cape.mantle, 3, { grad: o.cape.mantle2 || o.cape.mantle });
         [-0.16, 0.16].forEach(function (sx, ti) { var tg = new THREE.BoxGeometry(0.16, 1.5 + ti * 0.3, 0.035, 1, 8, 1); b.add(tg, { p: [sx, -0.7 - ti * 0.15, -0.52 - ti * 0.06], r: [0.34, sx * 0.5, sx * 0.3] }, o.cape.mantle, 3); });
       }
-      if (o.cape.trim) { var g2 = lathe([[cw * 1.0, -cl + 0.06], [cw * 1.06, -cl - 0.02], [cw * 1.02, -cl - 0.1]], 22, Math.PI * 0.5 + 0.55, Math.PI * 2 - 1.1); b.add(g2, { p: [0, 0, -0.1] }, o.cape.trim, 0); }
+      if (o.cape.clasp) { b.add(cyl(0.075, 0.06, 10), { p: [0, 0.02, 0.3 * k], r: [Math.PI / 2, 0, 0] }, o.cape.clasp, 1); }
+      if (o.cape.trim) { var g2 = lathe([[cw * 1.0, -cl + 0.06], [cw * 1.06, -cl - 0.02], [cw * 1.02, -cl - 0.1]], 22, c0 + cg / 2, Math.PI * 2 - cg); b.add(g2, { p: [0, 0, -0.1] }, o.cape.trim, 0); }
       t.part('cape', 'body', b, [0, 0.7, 0], { cape: 1 / cl });
     }
     t.h = 2.0 * (o.scale || 1);
@@ -255,7 +300,7 @@
   }
 
   var H = {
-    kestrel: function () { return humanoid({ head: 'hood', hood: 0x2c3a46, hood2: 0x44586a, eye: 0xffb347, coat: 0x2a343c, coat2: 0x3c4a54, leg: 0x1e252c, leg2: 0x2c363e, boot: 0x14181c, glove: 0xc8963c, belt: 0x8a5a2a, belt2: 0xd9a520, hand: 1.2, cuff: 0xd9a520, cape: { col: 0x16262e, col2: 0x2c4a56, trim: 0xe09a2a, len: 1.2, w: 0.66, mantle: 0xb8741a, mantle2: 0xdc9a2c } }); },
+    kestrel: function () { return humanoid({ head: 'hood', hood: 0x2c3a46, hood2: 0x44586a, eye: 0xffb347, coat: 0x2a343c, coat2: 0x3c4a54, leg: 0x1e252c, leg2: 0x2c363e, boot: 0x14181c, glove: 0xc8963c, belt: 0x8a5a2a, belt2: 0xd9a520, hand: 1.1, cuff: 0xd9a520, detail: true, collar: 0xb8741a, band: 0x8a5a2a, pouch: 0x7a5228, strap: 0x9a6a2e, cape: { col: 0x16262e, col2: 0x2c4a56, trim: 0xe09a2a, len: 1.15, w: 0.56, front: true, gap: 3.3, mgap: 1.9, msize: 0.62, mantle: 0xb8741a, mantle2: 0xdc9a2c, clasp: 0xd9a520 } }); },
     marrow: function () { return humanoid({ head: 'hood', hood: 0xe8e2d2, hood2: 0xfaf6ea, eye: 0xff3028, coat: 0x8a2a22, coat2: 0xb8402e, leg: 0x2a2224, leg2: 0x3a2e30, boot: 0x14181c, glove: 0x1c1c22, belt: 0x14161a, belt2: 0xff3028, hand: 1.2, cuff: 0xff3028, cape: { col: 0xc8c0ae, col2: 0xf0ead8, trim: 0x8a2a22, len: 1.2, w: 0.66, mantle: 0x9a2018, mantle2: 0xc83a28 } }); },
     scav: function () { return humanoid({ bulk: 1.18, head: 'dive', helm: 0x9a7a3a, helm2: 0xd8b25a, eye: 0xff5a2a, coat: 0x4a5a44, coat2: 0x6a7a5a, leg: 0x2c3430, boot: 0x1a1c1c, glove: 0x8a4a2a, belt: 0x8a2a1a, hand: 1.25, weapon: 'pipe', pack: 'tank' }); },
     warden: function () { return humanoid({ bulk: 1.25, scale: 1.12, head: 'flathelm', helm: 0xe6e0d0, eye: 0x9ff4ff, coat: 0x2a3a52, coat2: 0x3e5270, leg: 0x1c2430, boot: 0x101418, glove: 0xe6e0d0, pads: true, pad: 0xe6e0d0, belt: 0xd9a520, weapon: 'shield', hand: 1.2 }); },
