@@ -3,14 +3,17 @@
 <head>
 <meta charset="utf-8">
 <title>Wetware</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#04080a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow+Condensed:wght@400;500;600;700&family=Caveat+Brush&display=swap" rel="stylesheet">
 <style>
 :root { --ink:#0c0e14; --paper:#efe6cf; --paper2:#ddd2b6; --sod:#ffb347; --verm:#ff4a26; --teal:#3fe0d0; }
 * { box-sizing:border-box; }
-html, body { margin:0; height:100%; background:#04080a; overflow:hidden; color:var(--paper); font-family:'Barlow Condensed', 'Arial Narrow', Arial, sans-serif; user-select:none; -webkit-user-select:none; cursor:crosshair; }
+html, body { margin:0; height:100%; background:#04080a; overflow:hidden; color:var(--paper); font-family:'Barlow Condensed', 'Arial Narrow', Arial, sans-serif; user-select:none; -webkit-user-select:none; cursor:crosshair; touch-action:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; overscroll-behavior:none; }
 canvas#c { position:fixed; inset:0; width:100%; height:100%; display:block; }
 canvas#bars { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; }
 #floaters { position:fixed; inset:0; pointer-events:none; overflow:hidden; }
@@ -120,6 +123,91 @@ canvas#bars { position:fixed; inset:0; width:100%; height:100%; pointer-events:n
 #veil small { display:block; font:600 16px 'Barlow Condensed', sans-serif; letter-spacing:.2em; text-transform:uppercase; color:var(--sod); margin-bottom:8px; }
 #attract { position:absolute; left:22px; top:68px; font:700 17px 'Barlow Condensed', sans-serif; letter-spacing:.14em; text-transform:uppercase; color:var(--ink); background:var(--sod); border:3px solid var(--ink); padding:3px 12px 4px; box-shadow:3px 3px 0 var(--ink); display:none; animation:bob 1.2s ease-in-out infinite; }
 @keyframes bob { 50% { transform:translateY(-3px); } }
+
+/* ---------- layering ---------- */
+#hud { z-index:2; } #overlay { z-index:3; } #veil { z-index:4; }
+#tgrid, #touch, #gridbtns { display:none; }
+
+/* ---------- small screens (any input) ---------- */
+#overlay { overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; padding:max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+#overlay.show { align-items:safe center; }
+#gridwrap { max-width:100%; }
+#gridcv { max-width:min(1120px, calc(100vw - 30px)); max-height:calc(100vh - 40px); max-height:calc(100dvh - 40px); width:auto; height:auto; }
+#bossbar { width:min(560px, 92vw); margin-left:0; transform:translateX(-50%); }
+#say { width:min(560px, 94vw); margin-left:0; left:50%; transform:translateX(-50%) rotate(-.5deg); }
+#banner h2 { font-size:clamp(30px, 8vw, 54px); -webkit-text-stroke-width:clamp(6px, 1.4vw, 10px); }
+#veil div { font-size:clamp(26px, 6.5vw, 44px); padding:0 18px; }
+@media (max-width: 760px), (max-height: 520px) {
+  #tl { left:14px; top:10px; } #title { font-size:18px; } #hint { font-size:14px; max-width:min(640px, 62vw); }
+  #bl { left:12px; bottom:12px; gap:10px; } .bars { width:min(310px, 46vw); }
+  .slot { width:38px; height:38px; }
+  #br { right:14px; bottom:12px; font-size:20px; } #br canvas { width:20px; height:20px; }
+  #say { padding:8px 10px 8px 88px; min-height:84px; } #say canvas { width:84px; height:84px; } #say .txt { font-size:16px; } #say .who { font-size:15px; }
+  .panel { width:100%; } .panel h1 { font-size:30px; } .panel .lead canvas { width:56px; height:56px; } .panel .lead div { font-size:16px; }
+  .cards { gap:12px; } .card { padding:10px 12px 12px; min-width:0; flex:1 1 200px; } .card h3 { font-size:21px; } .card p { font-size:15px; }
+  #endcard table { font-size:16px; } #endcard td:last-child { font-size:19px; }
+}
+@media (max-width: 520px) {
+  .card { flex:1 1 100%; max-width:none; }
+}
+
+/* ---------- touch mode ---------- */
+body.touch { cursor:default; }
+body.touch #touch { display:block; position:fixed; inset:0; z-index:1; touch-action:none; visibility:hidden; }
+body.touch #touch.live { visibility:visible; }
+#stick { position:absolute; left:0; top:0; width:0; height:0; display:none; pointer-events:none; }
+#stick:before { content:''; position:absolute; left:-58px; top:-58px; width:116px; height:116px; border-radius:50%; border:3px solid rgba(239,230,207,.55); background:rgba(12,14,20,.28); }
+#stick i { position:absolute; left:-28px; top:-28px; width:56px; height:56px; border-radius:50%; background:rgba(239,230,207,.85); border:3px solid var(--ink); box-shadow:2px 3px 0 rgba(12,14,20,.6); }
+#tbtns { position:absolute; right:env(safe-area-inset-right); bottom:env(safe-area-inset-bottom); width:300px; height:290px; transform-origin:100% 100%; }
+.tb { position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:50%; overflow:hidden; background:rgba(239,230,207,.82); color:var(--ink); border:3px solid var(--ink); box-shadow:3px 3px 0 rgba(12,14,20,.7); font:700 13px 'Barlow Condensed', sans-serif; letter-spacing:.06em; text-transform:uppercase; line-height:1; text-align:center; }
+.tb span { position:relative; max-width:90%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tb kbd { position:relative; font:700 10px 'Barlow Condensed', sans-serif; opacity:.55; margin-top:2px; }
+.tb u { position:absolute; left:0; right:0; bottom:0; height:0; background:rgba(12,14,20,.55); }
+.tb.down { background:#fff2c8; transform:scale(.93); box-shadow:1px 1px 0 rgba(12,14,20,.7); }
+#tb-attack { width:92px; height:92px; right:24px; bottom:24px; background:rgba(255,179,71,.9); font-size:16px; }
+#tb-attack.down { background:#ffd070; }
+#tb-special { width:64px; height:64px; right:38px; bottom:132px; background:rgba(255,106,58,.85); }
+#tb-dash { width:64px; height:64px; right:132px; bottom:26px; background:rgba(63,224,208,.85); }
+#tb-tag { width:56px; height:56px; right:118px; bottom:108px; }
+#tb-vent { width:54px; height:54px; right:212px; bottom:30px; }
+#tb-active { width:52px; height:52px; right:112px; bottom:180px; }
+@media (max-height: 460px) { #tbtns { transform:scale(.82); } }
+@media (min-width: 700px) and (min-height: 700px) { #tbtns { transform:scale(1.15); } }
+@media (max-width: 380px) { #tbtns { transform:scale(.86); } }
+
+/* touch HUD: everything moves to the top edge, the bottom belongs to the thumbs */
+body.touch.tlive #tgrid { display:block; position:absolute; top:max(10px, env(safe-area-inset-top)); right:calc(max(12px, env(safe-area-inset-right)) + 54px); pointer-events:auto; font:700 14px 'Barlow Condensed', sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--ink); background:var(--paper); border:3px solid var(--ink); padding:6px 12px 7px; box-shadow:3px 3px 0 var(--ink); }
+body.touch #sound { top:max(10px, env(safe-area-inset-top)); right:max(12px, env(safe-area-inset-right)); width:44px; height:38px; padding:0; overflow:hidden; font-size:0; transform:none; display:flex; align-items:center; justify-content:center; }
+body.touch #sound:before { content:'\266A'; font-size:20px; }
+body.touch #sound.on:before { content:'\266B'; }
+body.touch #bl { top:max(10px, env(safe-area-inset-top)); bottom:auto; left:max(12px, env(safe-area-inset-left)); }
+body.touch .bars { width:min(280px, 40vw); }
+body.touch #slots { display:none; }
+body.touch #br { top:calc(max(10px, env(safe-area-inset-top)) + 46px); bottom:auto; right:max(12px, env(safe-area-inset-right)); font-size:17px; line-height:1.05; }
+body.touch #br small { display:none; } body.touch #br canvas { width:17px; height:17px; }
+body.touch #tl { top:calc(max(10px, env(safe-area-inset-top)) + 100px); left:max(12px, env(safe-area-inset-left)); }
+body.touch #title { font-size:15px; } body.touch #hint { font-size:14px; max-width:min(560px, 66vw); }
+body.touch #hud.hasboss #tl { top:calc(max(10px, env(safe-area-inset-top)) + 150px); }
+body.touch #bossbar { top:calc(max(10px, env(safe-area-inset-top)) + 98px); }
+body.touch #bossbar .nm { font-size:17px; }
+body.touch #attract { top:auto; bottom:30%; left:50%; transform:translateX(-50%); font-size:22px; padding:8px 20px; }
+body.touch #say { top:calc(max(10px, env(safe-area-inset-top)) + 70px); bottom:auto; pointer-events:auto; }
+body.touch #prompt { pointer-events:auto; padding:8px 14px 9px; font-size:17px; border-width:3px; }
+body.touch .btn { padding:9px 16px 10px; font-size:17px; }
+body.touch #gridbtns { display:flex; gap:14px; justify-content:center; margin-top:12px; }
+body.touch #gridcv { max-height:calc(100vh - 90px); max-height:calc(100dvh - 90px); }
+/* a short landscape phone: buttons beside the sheet so the sheet gets the full height */
+@media (orientation: landscape) and (max-height: 520px) {
+  body.touch #gridwrap[style*="block"] { display:flex !important; align-items:center; gap:12px; }
+  body.touch #gridcv { max-height:calc(100vh - 24px); max-height:calc(100dvh - 24px); max-width:calc(100vw - 170px); }
+  body.touch #gridbtns { flex-direction:column; margin-top:0; }
+}
+/* a narrow portrait phone: let the grid sheet run wider than the screen and scroll sideways */
+@media (orientation: portrait) and (max-width: 600px) {
+  body.touch #gridwrap { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y; }
+  body.touch #gridcv { max-width:none; max-height:none; width:190vw; }
+  body.touch #gridbtns { position:sticky; left:0; }
+}
 </style>
 </head>
 <body>
@@ -162,6 +250,7 @@ canvas#bars { position:fixed; inset:0; width:100%; height:100%; pointer-events:n
 <div id="veil"><div></div></div>
 <script src="lib/three.r186.min.js"></script>
 <script src="js/core.js"></script>
+<script src="js/touch.js"></script>
 <script src="js/gfx.js"></script>
 <script src="js/paint.js"></script>
 <script src="js/models.js"></script>

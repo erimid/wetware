@@ -543,7 +543,7 @@
     if (P && room) {
       var ZOOM = 1.2, tx = P.x, tz = P.z - 1.2, D0 = 38 * ZOOM; if (G.state === 'end') { tz -= 3.5; D0 = 42 * ZOOM; }
       if (G.cinematic > 0) { tx = G.cineX; tz = G.cineZ; }
-      else if (W.input.everMoved && !U.modal && !G.frozen) { var gp = Gf.groundPoint(W.input.mouseX, W.input.mouseY); tx += W.clamp((gp.x - P.x) * 0.12, -2, 2); tz += W.clamp((gp.z - P.z) * 0.12, -1.5, 1.5); }
+      else if (W.input.everMoved && !W.input.touchMode && !U.modal && !G.frozen) { var gp = Gf.groundPoint(W.input.mouseX, W.input.mouseY); tx += W.clamp((gp.x - P.x) * 0.12, -2, 2); tz += W.clamp((gp.z - P.z) * 0.12, -1.5, 1.5); }
       if (G.cleared && G.state === 'run' && !G.boss) tz -= 2.6;
       if (G.boss && !G.boss.dead && G.boss.type === 'dredge') { tx = W.lerp(tx, G.boss.x, 0.35); tz = W.lerp(tz, G.boss.z, 0.35); D0 = 40 * ZOOM; }
       var v = P_.view;
