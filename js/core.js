@@ -21,6 +21,7 @@ var W = window.W = {};
     noattract: q.get('noattract') === '1',
     room: q.has('room') ? parseInt(q.get('room'), 10) : null,
     res: q.has('res') ? parseFloat(q.get('res')) : null,
+    touch: q.get('touch') === '1', // force the touch controls on
     speed: q.has('speed') ? parseInt(q.get('speed'), 10) : 1
   };
 
@@ -167,6 +168,7 @@ var W = window.W = {};
       a.dash = a.dash || I.padHit('a'); a.tag = a.tag || I.padHit('rb'); a.vent = a.vent || I.padHit('b');
       a.grid = a.grid || I.padHit('back'); a.active = a.active || I.padHit('lb'); a.interact = a.interact || I.padHit('b') || I.padHit('a');
     }
+    if (W.touch) W.touch.apply(a);
     var l3 = Math.hypot(a.mx, a.mz); if (l3 > 1) { a.mx /= l3; a.mz /= l3; }
     return a;
   };

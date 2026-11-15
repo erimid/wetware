@@ -17,19 +17,32 @@
     el.sound.addEventListener('click', function () { W.audio.enable(); el.sound.textContent = W.audio.on ? 'Sound on' : 'Enable sound'; el.sound.classList.toggle('on', W.audio.on); });
     if (W.params.fps) el.fps.style.display = 'block';
     U.defaultHint = '<b>WASD</b> move · <b>Mouse</b> aim · <b>Left</b> attack · <b>Right</b> special · <b>Space</b> dash · <b>Q</b> tag · <b>E</b> vent heat · <b>F</b> implant · <b>Tab</b> grid';
-    el.hint.innerHTML = U.defaultHint;
+    U.touchHint = '<b>Left thumb</b> move · <b>Attack</b> aims itself, drag it to aim · tap the ground to strike there · <b>Grid</b> top right';
+    el.hint.innerHTML = U.hintFor();
+    el.attract.textContent = W.input.touchMode ? 'Tap to play' : 'Click to play';
     U.grid.init();
     window.addEventListener('resize', sizeBars); sizeBars();
   };
+  U.hintFor = function () { return W.input.touchMode ? U.touchHint : U.defaultHint; };
+  U.refreshHint = function () {
+    if (!el.hint) return;
+    if (!el.hint.classList.contains('alert')) el.hint.innerHTML = U.hintFor();
+    el.attract.textContent = W.input.touchMode ? 'Tap to play' : 'Click to play';
+    if (U.modal && U.modal.type === 'grid') GR.draw();
+  };
+  // keyboard words in game text, said for thumbs
+  var TOUCHWORDS = [[/Left click to hit/g, 'Tap Attack to hit'], [/Press E to vent/g, 'Tap Vent'], [/\bE vents it\b/g, 'Vent releases it'], [/<b>E<\/b>/g, '<b>Tap</b>'], [/^E for more$/, 'Tap for more']];
+  function forTouch(t) { if (!W.input.touchMode || !t) return t; TOUCHWORDS.forEach(function (w) { t = t.replace(w[0], w[1]); }); return t; }
+  U.forTouch = forTouch;
   function sizeBars() { el.bars.width = window.innerWidth; el.bars.height = window.innerHeight; }
 
   // ---------- hint / toast / say / banner ----------
   var toastT = 0, sayT = 0, bannerT = 0, sayQueue = [];
-  U.toast = function (text, dur) { el.hint.textContent = text; el.hint.classList.add('alert'); toastT = dur || 5; };
+  U.toast = function (text, dur) { el.hint.textContent = forTouch(text); el.hint.classList.add('alert'); toastT = dur || 5; };
   U.say = function (key, text, dur, more) {
     var d = Pt.portraitDefs[key] || {}, cv = el.say.querySelector('canvas'), x = cv.getContext('2d');
     x.drawImage(Pt.portrait(key), 0, 0);
-    el.say.querySelector('.who').textContent = d.name || key; el.say.querySelector('.txt').textContent = text; el.say.querySelector('.more').textContent = more || '';
+    el.say.querySelector('.who').textContent = d.name || key; el.say.querySelector('.txt').textContent = text; el.say.querySelector('.more').textContent = forTouch(more || '');
     el.say.style.display = 'block'; sayT = dur || 4; W.audio.sfx('comm');
   };
   U.hideSay = function () { el.say.style.display = 'none'; sayT = 0; };
@@ -37,7 +50,7 @@
   U.veil = function (small, text) { el.veil.style.display = 'flex'; el.veil.firstElementChild.innerHTML = (small ? '<small>' + small + '</small>' : '') + text; };
   U.hideVeil = function () { el.veil.style.display = 'none'; };
   U.attract = function (on) { el.attract.style.display = on ? 'block' : 'none'; };
-  U.prompt = function (x, y, z, html) { var p = W.gfx.project(x, y, z); el.prompt.innerHTML = html; el.prompt.style.display = 'block'; el.prompt.style.transform = 'translate(' + (p.x | 0) + 'px,' + (p.y | 0) + 'px) translate(-50%,-100%)'; };
+  U.prompt = function (x, y, z, html) { var p = W.gfx.project(x, y, z); html = forTouch(html); if (el.prompt._h !== html) { el.prompt._h = html; el.prompt.innerHTML = html; } el.prompt.style.display = 'block'; el.prompt.style.transform = 'translate(' + (p.x | 0) + 'px,' + (p.y | 0) + 'px) translate(-50%,-100%)'; };
   U.hidePrompt = function () { el.prompt.style.display = 'none'; };
 
   // ---------- HUD ----------
@@ -45,9 +58,10 @@
   function set(k, v, fn) { if (last[k] !== v) { last[k] = v; fn(v); } }
   U.hud = function (dt) {
     var run = G.run, P = G.player;
-    if (toastT > 0) { toastT -= dt; if (toastT <= 0) { el.hint.innerHTML = U.defaultHint; el.hint.classList.remove('alert'); } }
+    if (toastT > 0) { toastT -= dt; if (toastT <= 0) { el.hint.classList.remove('alert'); el.hint.innerHTML = U.hintFor(); } }
     if (sayT > 0) { sayT -= dt; if (sayT <= 0) el.say.style.display = 'none'; }
     if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) el.banner.style.display = 'none'; }
+    if (W.touch) W.touch.update();
     var show = !!(run && P) && G.state !== 'end';
     set('show', show, function (v) { el.bl.style.display = v ? 'flex' : 'none'; el.br.style.display = v ? 'block' : 'none'; });
     set('where', G.whereText || '', function (v) { el.where.textContent = v; });
@@ -60,7 +74,7 @@
     set('heatn', P.redline ? 'Redline' : (P.inWater && P.heat > 1 ? 'Cooling' : Math.round(P.heat) + ''), function (v) { el.heatnum.textContent = v; });
     set('red', P.redline, function (v) { el.heatbar.classList.toggle('red', v); });
     set('pips', P.maxDashes + ':' + P.dashes, function () { var h = ''; for (var i = 0; i < P.maxDashes; i++) h += '<span class="' + (i < P.dashes ? 'on' : '') + '"></span>'; el.pips.innerHTML = h; });
-    set('qname', G.run.char, function () { var c = W.combat.char(); U.defaultHint = U.defaultHint.replace(/<b>Q<\/b> [^·]*·/, '<b>Q</b> ' + c.qShort + ' ·'); if (!el.hint.classList.contains('alert')) el.hint.innerHTML = U.defaultHint; });
+    set('qname', G.run.char, function () { var c = W.combat.char(); U.defaultHint = U.defaultHint.replace(/<b>Q<\/b> [^·]*·/, '<b>Q</b> ' + c.qShort + ' ·'); if (!el.hint.classList.contains('alert')) el.hint.innerHTML = U.hintFor(); });
     set('tagcd', Math.round(P.tagCd / (P.tagMax || 7) * 20), function (v) { el.slotTag.querySelector('u').style.height = (v * 5) + '%'; });
     var act = G.B.active;
     set('act', act, function (v) { el.slotAct.classList.toggle('off', !v); var x = el.slotAct.querySelector('canvas').getContext('2d'); x.clearRect(0, 0, 64, 64); if (v) { x.drawImage(Pt.icon('implant', v === 'emp' ? '#49d3ff' : '#ff4058'), 0, 0); } });
@@ -70,7 +84,7 @@
     set('cores', W.save.cores, function (v) { el.cores.textContent = v; });
     // boss bar
     var b = G.boss && !G.boss.dead ? G.boss : null;
-    set('boss', !!b, function (v) { el.bossbar.style.display = v ? 'block' : 'none'; });
+    set('boss', !!b, function (v) { el.bossbar.style.display = v ? 'block' : 'none'; $('hud').classList.toggle('hasboss', v); });
     if (b) {
       set('bname', b.name, function (v) { el.bossbar.querySelector('.nm').textContent = v; el.bossheat.style.display = b.type === 'marrow' ? 'block' : 'none'; });
       set('bhp', Math.round(b.hp / b.maxHp * 400), function (v) { el.bossbar.querySelector('.bar i').style.width = (v / 4) + '%'; });
@@ -182,6 +196,12 @@
     cv.addEventListener('mousemove', function (ev) { var p = pos(ev); GR.mx = p.x; GR.my = p.y; GR.hover = GR.cellAt(p.x, p.y); });
     cv.addEventListener('mousedown', function (ev) { var p = pos(ev); GR.mx = p.x; GR.my = p.y; GR.hover = GR.cellAt(p.x, p.y); if (ev.button === 2) GR.rotate(); else GR.click(p.x, p.y); ev.preventDefault(); });
     cv.addEventListener('wheel', function () { GR.rotate(); }, { passive: true });
+    // thumb buttons for the grid (shown in touch mode)
+    var bar = document.createElement('div'); bar.id = 'gridbtns';
+    bar.innerHTML = '<div class="btn ui-click" data-k="rot">Rotate piece</div><div class="btn ui-click" data-k="done">Done</div>';
+    el.gridwrap.appendChild(bar);
+    bar.querySelector('[data-k=rot]').addEventListener('click', function () { GR.rotate(); GR.draw(); });
+    bar.querySelector('[data-k=done]').addEventListener('click', function () { if (U.modal && U.modal.type === 'grid') GR.close(); });
   };
   GR.cellAt = function (x, y) { var c = Math.floor((x - GR.gx) / GR.cs), r = Math.floor((y - GR.gy) / GR.cs); return (c >= 0 && c < 7 && r >= 0 && r < 8) ? { c: c, r: r } : null; };
   GR.open = function (o) {
@@ -350,8 +370,8 @@
       line(fi.name + '  ·  fits: ' + (info.zone === 'arm' ? 'either arm' : D.ZONE_NAME[info.zone].toLowerCase()), '700 14px "Barlow Condensed", sans-serif', '#5a5040', 22);
       line(info.text, '500 18px "Barlow Condensed", sans-serif', INK, 21);
       line(info.heat, '700 15px "Barlow Condensed", sans-serif', '#b8300e', 26);
-      if (GR.hold) { x.fillStyle = INK; x.fillRect(rx - 6, y - 14, 492, 30); x.font = '700 17px "Barlow Condensed", sans-serif'; x.fillStyle = '#fff2c8'; x.fillText('Click a lit cell to install it. R turns the piece.', rx + 4, y + 7); y += 34; }
-    } else { line(GR.note || 'Hover an implant to read it.', '500 18px "Barlow Condensed", sans-serif', '#5a5040', 28); y += 60; }
+      if (GR.hold) { x.fillStyle = INK; x.fillRect(rx - 6, y - 14, 492, 30); x.font = '700 17px "Barlow Condensed", sans-serif'; x.fillStyle = '#fff2c8'; x.fillText(W.input.touchMode ? 'Tap a lit cell to install it. Rotate turns the piece.' : 'Click a lit cell to install it. R turns the piece.', rx + 4, y + 7); y += 34; }
+    } else { line(GR.note || (W.input.touchMode ? 'Tap an implant to lift it and read it.' : 'Hover an implant to read it.'), '500 18px "Barlow Condensed", sans-serif', '#5a5040', 28); y += 60; }
     y = Math.max(y, 200);
     line('INSTALLED', '900 18px "Big Shoulders Display", Impact, sans-serif', INK, 22);
     if (!run.implants.length) line('Nothing yet. The syndicates will call.', '500 16px "Barlow Condensed", sans-serif', '#5a5040', 20);
@@ -366,7 +386,8 @@
     if (GR.tray.length) { x.font = '900 16px "Big Shoulders Display", Impact, sans-serif'; x.fillStyle = INK; x.fillText('UNPLACED (sold on close)', 610, 550); GR.tray.forEach(function (id, i) { var sc = shapeCanvas(D.IMPLANTS[id]); x.fillStyle = '#fbf6e6'; x.fillRect(610 + i * 84, 560, 76, 56); x.strokeStyle = INK; x.lineWidth = 2; x.strokeRect(610 + i * 84, 560, 76, 56); x.drawImage(sc, 611 + i * 84, 562); }); }
     // footer
     x.font = '600 16px "Barlow Condensed", sans-serif'; x.fillStyle = '#5a5040'; x.textAlign = 'left';
-    x.fillText(GR.hold ? 'Click a lit cell to install. R, wheel or right-click turns the piece. Click an installed implant to pull it.' : 'Click an installed implant to lift it. Tab closes.', 30, 636);
+    if (W.input.touchMode) x.fillText(GR.hold ? 'Tap a lit cell to install. Rotate turns the piece. Tap an installed implant to pull it.' : 'Tap an installed implant to lift it. Done closes.', 30, 636);
+    else x.fillText(GR.hold ? 'Click a lit cell to install. R, wheel or right-click turns the piece. Click an installed implant to pull it.' : 'Click an installed implant to lift it. Tab closes.', 30, 636);
     x.fillStyle = INK; x.fillRect(960, 606, 130, 38); x.fillStyle = '#efe6cf'; x.font = '700 18px "Barlow Condensed", sans-serif'; x.textAlign = 'center'; x.fillText('CLOSE  (TAB)', 1025, 631);
     if (GR.flash > 0) { x.fillStyle = 'rgba(255,255,255,' + (GR.flash * 1.2).toFixed(2) + ')'; x.fillRect(0, 0, 1120, 660); }
   };

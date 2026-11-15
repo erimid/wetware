@@ -347,7 +347,10 @@
     var w = Math.max(320, Math.floor(window.innerWidth * dpr)), h = Math.max(200, Math.floor(window.innerHeight * dpr));
     G.renderer.setSize(w, h, false);
     G.fullW = w; G.fullH = h;
-    G.camera.aspect = w / h; G.camera.updateProjectionMatrix();
+    // the view was framed for landscape; on narrow or portrait screens widen the vertical field so the horizontal one holds
+    var asp = w / h, MINASP = 1.45, fov = 19;
+    if (asp < MINASP) fov = Math.min(44, 2 * Math.atan(Math.tan(fov * Math.PI / 360) * MINASP / asp) * 180 / Math.PI);
+    G.camera.aspect = asp; G.camera.fov = fov; G.camera.updateProjectionMatrix();
     G.makeTargets();
   };
   G.makeTargets = function () {
