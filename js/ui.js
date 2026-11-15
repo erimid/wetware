@@ -62,6 +62,7 @@
     if (sayT > 0) { sayT -= dt; if (sayT <= 0) el.say.style.display = 'none'; }
     if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) el.banner.style.display = 'none'; }
     if (W.touch) W.touch.update();
+    set('tmode', !!W.input.touchMode, function () { U.refreshHint(); });
     var show = !!(run && P) && G.state !== 'end';
     set('show', show, function (v) { el.bl.style.display = v ? 'flex' : 'none'; el.br.style.display = v ? 'block' : 'none'; });
     set('where', G.whereText || '', function (v) { el.where.textContent = v; });

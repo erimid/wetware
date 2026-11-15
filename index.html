@@ -99,7 +99,7 @@ canvas#bars { position:fixed; inset:0; width:100%; height:100%; pointer-events:n
 .panel .lead div { background:var(--paper); color:var(--ink); border:3px solid var(--ink); padding:6px 12px; font-size:19px; font-weight:500; box-shadow:3px 3px 0 var(--ink); max-width:680px; }
 .panel .lead div b { font-family:'Big Shoulders Display', Impact, sans-serif; font-size:14px; letter-spacing:.1em; text-transform:uppercase; display:block; }
 .cards { display:flex; gap:16px; flex-wrap:wrap; }
-.card { position:relative; flex:1 1 220px; min-width:200px; max-width:340px; background:var(--paper); color:var(--ink); border:4px solid var(--ink); box-shadow:6px 6px 0 var(--ink); padding:12px 14px 14px; cursor:pointer; transition:transform .08s; }
+.card { touch-action:manipulation; position:relative; flex:1 1 220px; min-width:200px; max-width:340px; background:var(--paper); color:var(--ink); border:4px solid var(--ink); box-shadow:6px 6px 0 var(--ink); padding:12px 14px 14px; cursor:pointer; transition:transform .08s; }
 .card:nth-child(odd) { transform:rotate(-.7deg); } .card:nth-child(even) { transform:rotate(.6deg); }
 .card:hover, .card.sel { transform:translate(-2px,-4px) rotate(0deg); box-shadow:9px 10px 0 var(--verm); }
 .card.dis { opacity:.5; cursor:default; } .card.dis:hover { transform:none; box-shadow:6px 6px 0 var(--ink); }
@@ -111,7 +111,7 @@ canvas#bars { position:fixed; inset:0; width:100%; height:100%; pointer-events:n
 .card canvas.shape { float:right; margin:0 0 4px 8px; }
 .card .num { position:absolute; left:-12px; top:-12px; width:26px; height:26px; background:var(--ink); color:var(--paper); font:700 15px 'Barlow Condensed', sans-serif; display:flex; align-items:center; justify-content:center; }
 .foot { margin-top:16px; display:flex; gap:12px; align-items:center; font-size:15px; font-weight:500; color:#d6ccb2; }
-.btn { pointer-events:auto; cursor:pointer; font:700 16px 'Barlow Condensed', sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--ink); background:var(--paper); border:3px solid var(--ink); padding:5px 14px 6px; box-shadow:3px 3px 0 var(--ink); }
+.btn { touch-action:manipulation; pointer-events:auto; cursor:pointer; font:700 16px 'Barlow Condensed', sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--ink); background:var(--paper); border:3px solid var(--ink); padding:5px 14px 6px; box-shadow:3px 3px 0 var(--ink); }
 .btn:hover { background:#fff; box-shadow:4px 5px 0 var(--verm); }
 #gridwrap { display:none; position:relative; }
 #gridcv { display:block; background:var(--paper); border:5px solid var(--ink); box-shadow:8px 8px 0 var(--ink); cursor:pointer; }
