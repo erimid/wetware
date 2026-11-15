@@ -53,22 +53,29 @@
     // top-right body grid button, beside the sound toggle
     var g = document.createElement('div'); g.id = 'tgrid'; g.className = 'ui-click'; g.textContent = 'Grid';
     document.getElementById('hud').appendChild(g); el.grid = g;
-    g.addEventListener('pointerdown', function (e) { if (e.pointerType === 'mouse') return; e.preventDefault(); T.pressed.grid = true; });
+    g.addEventListener('pointerdown', function (e) { if (isMouse(e)) return; e.preventDefault(); T.pressed.grid = true; });
 
     root.addEventListener('pointerdown', down, { passive: false });
     window.addEventListener('pointermove', move, { passive: false });
     window.addEventListener('pointerup', up);
     window.addEventListener('pointercancel', up);
 
+    // iOS Safari ignores user-scalable=no and pointer preventDefault: two thumbs read as a pinch and quick taps as a
+    // double-tap zoom. Cancelling the touch events themselves on the controls stops both.
+    function hold(e) { if (e.cancelable) e.preventDefault(); }
+    [root, g, document.getElementById('prompt'), document.getElementById('say')].forEach(function (n) {
+      n.addEventListener('touchstart', hold, { passive: false }); n.addEventListener('touchmove', hold, { passive: false }); n.addEventListener('touchend', hold, { passive: false });
+    });
     // tap the prompt or the speech box to interact / read on
     ['prompt', 'say'].forEach(function (id) {
-      document.getElementById(id).addEventListener('pointerdown', function (e) { if (e.pointerType === 'mouse') return; e.preventDefault(); T.pressed.interact = true; });
+      document.getElementById(id).addEventListener('pointerdown', function (e) { if (isMouse(e)) return; e.preventDefault(); T.pressed.interact = true; });
     });
   }
 
   function btnAt(target) { var b = target && target.closest ? target.closest('.tb') : null; return b ? b._act : null; }
+  function isMouse(e) { return e.pointerType === 'mouse' && performance.now() - T.lastTouchT > 900; }
   function down(e) {
-    if (e.pointerType === 'mouse') return;
+    if (isMouse(e)) return;
     e.preventDefault(); setMode(true); T.lastTouchT = performance.now();
     var act = btnAt(e.target), x = e.clientX, y = e.clientY;
     if (act) {
@@ -89,9 +96,9 @@
     }
   }
   function move(e) {
-    if (e.pointerType === 'mouse') {
+    if (isMouse(e)) {
       // a real mouse moving well after the last touch hands control back to mouse and keyboard
-      if (T.on && performance.now() - T.lastTouchT > 900 && (Math.abs(e.movementX) + Math.abs(e.movementY) > 2)) setMode(false);
+      if (T.on && (Math.abs(e.movementX) + Math.abs(e.movementY) > 2)) setMode(false);
       return;
     }
     var s = T.stick;
@@ -106,7 +113,7 @@
     if (a && e.pointerId === a.id) { e.preventDefault(); a.dx = e.clientX - a.ox; a.dy = e.clientY - a.oy; }
   }
   function up(e) {
-    if (e.pointerType === 'mouse') return;
+    if (isMouse(e)) return;
     if (T.stick && e.pointerId === T.stick.id) { T.stick = null; el.stick.style.display = 'none'; }
     if (T.aim && e.pointerId === T.aim.id) {
       if (T.aim.btn === 'attack') I.mdown[0] = false; else I.mdown[2] = false;
@@ -171,11 +178,24 @@
   // ---------- wire in ----------
   var endFrame = I.endFrame;
   I.endFrame = function () { endFrame(); T.endFrame(); };
-  window.addEventListener('pointerdown', function (e) { if (e.pointerType !== 'mouse') { setMode(true); T.lastTouchT = performance.now(); I.any = true; } }, true);
+  function touched() { T.lastTouchT = performance.now(); I.any = true; setMode(true); }
+  window.addEventListener('pointerdown', function (e) { if (e.pointerType !== 'mouse') touched(); }, true);
+  // some mobile browsers report a finger as a mouse pointer; a real touch event still says it is a finger
+  window.addEventListener('touchstart', touched, { capture: true, passive: true });
   window.addEventListener('keydown', function (e) { if (!e.repeat && T.on) setMode(false); });
+  // no page zoom anywhere: Safari's pinch gesture and double-tap zoom
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) { document.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false }); });
+  document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+  var lastEnd = 0;
+  document.addEventListener('touchend', function (e) {
+    var now = performance.now();
+    if (now - lastEnd < 320 && e.cancelable && !(e.target.closest && e.target.closest('#overlay'))) e.preventDefault();
+    lastEnd = now;
+  }, { passive: false });
   function boot() {
     build();
-    var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    var mq = function (q) { return !!(window.matchMedia && window.matchMedia(q).matches); };
+    var coarse = mq('(pointer: coarse)') || mq('(any-pointer: coarse)') || (navigator.maxTouchPoints > 0 && !mq('(hover: hover)'));
     if (coarse || W.params.touch) setMode(true);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
